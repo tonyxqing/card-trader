@@ -1,72 +1,44 @@
 mod model;
-mod gql;
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use std::sync::Mutex;
+use model::player::*;
 
-
-use actix_web::{guard, web, web::Data, App, HttpServer, error, HttpResponse, HttpRequest};
-use async_graphql::{http::GraphiQLSource, Schema, EmptyMutation, EmptySubscription};
-use async_graphql_actix_web::{GraphQLSubscription, GraphQLRequest, GraphQLResponse};
-
-
-async fn index(schema: web::Data<gql::SchemaStruct>, req: GraphQLRequest) -> GraphQLResponse {
-    schema.execute(req.into_inner()).await.into()
+#[get("/")]
+async fn hello_world() -> impl Responder {
+    HttpResponse::Ok().body("Hello World!")
 }
 
-async fn index_graphiql() -> error::Result<HttpResponse> {
-    Ok(HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body(
-            GraphiQLSource::build()
-            .endpoint("/")
-            .subscription_endpoint("/")
-            .finish()
-        )
-    )
+async fn manual_hi(data: web::Data<AppState>) -> impl Responder {
+    let response = format!("{:?}", data.users.lock().unwrap());
+    HttpResponse::Ok().body(response)
+}
+struct AppState {
+    users: Mutex<Vec<Player>>,
 }
 
-async fn init(value: serde_json::Value) -> async_graphql::Result<async_graphql::Data> {
-	if let serde_json::Value::Object(payload) = value {
-		let a = payload.get("Authorization").or(payload.get("authorization"));
-		if let Some(v) = a {
-			if let Some(s) = v.as_str() {
-					let mut data = async_graphql::Data::default();
-					data.insert(s);
-					return Ok(data);
-			}
-		}
-	}
-    let err: &'static str = "hello";
-	Err(err.into())
-}
-
-async fn index_ws(
-    schema: web::Data<gql::SchemaStruct>,
-    req: HttpRequest,
-    payload: web::Payload
-) -> error::Result<HttpResponse> {
-    GraphQLSubscription::new(Schema::clone(&*schema)).on_connection_init(init).start(&req, payload)
-}
-
-
-#[actix_web::main] // or #[tokio::main]
-async fn main() -> std::io::Result<()> {
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-    let schema = Schema::build(gql::Query, EmptyMutation, EmptySubscription)
-    .data(model::Storage::default())
-    .finish();
-
-    HttpServer::new(move|| {
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {    
+    // load TLS keys
+    // to create a self-signed temporary cert for testing:
+    // `openssl req -x509 -newkey rsa:4096 -nodes -keyout key.pem -out cert.pem -days 365 -subj '/CN=localhost'`
+    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    builder
+        .set_private_key_file("key.pem", SslFiletype::PEM)
+        .unwrap();
+    builder.set_certificate_chain_file("cert.pem").unwrap();
+    let initial_state = web::Data::new(AppState {
+        users: Mutex::new(vec![]),
+    });
+    HttpServer::new(move || {
         App::new()
-        .app_data(Data::new(schema.clone()))
-        .service(web::resource("/").guard(guard::Post()).to(index))
-        .service(
-            web::resource("/")
-                .guard(guard::Get())
-                .guard(guard::Header("upgrade", "websocket"))
-                .to(index_ws),
-        )
-        .service(web::resource("/iql").guard(guard::Get()).to(index_graphiql))
+            .app_data(initial_state.clone())
+            .service(hello_world)
+            .service(web::scope("/app").route("/hi", web::get().to(manual_hi)))
+            .route("/hi", web::get().to(manual_hi))
+            .route("/hello", web::get().to(manual_hi))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind_openssl("127.0.0.1:8080", builder)?
     .run()
     .await
 }
