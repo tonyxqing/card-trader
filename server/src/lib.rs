@@ -1,16 +1,14 @@
 pub mod model;
 pub mod db;
 use futures::stream::{StreamExt, TryStreamExt};
-
+use mongodb::{Database, bson::uuid::Uuid};
 use db::*;
 use model::player::*;
-
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    
     #[test]
     fn card_can_be_traded() {}
 
@@ -27,16 +25,22 @@ mod tests {
 
     #[actix_rt::test]
     async fn db_can_add_card() {
-        let db = connect_db().await;
+        let r: Resolver = Resolver::new().await;
         let p = Player::new(String::from("Kevin"));
-        let result = add_player_to_db(&db.unwrap(), p).await;
+        let result = add_player_to_db(&r.db, p).await;
         assert!(result);
     }
 
     #[actix_rt::test]
     async fn db_can_remove_card() {
-        let db = connect_db().await;
-        println!("Starting Removal");
-        remove_player_from_db(&db.unwrap(), String::from("Kevin")).await;
+        let r: Resolver = Resolver::new().await;
+        remove_player_from_db(&r.db, Uuid::new());
+    }
+
+    #[actix_rt::test]
+    async fn db_can_retrieve_cards() {
+        let r: Resolver = Resolver::new().await;
+        let players = fetch_players_from_db(&r.db).await.unwrap_or(Vec::new());
+        println!("The array of players looks like {:?}", players );
     }
 }
