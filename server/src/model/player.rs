@@ -1,8 +1,10 @@
 use serde::{Serialize, Deserialize};
 use chrono::prelude::*;
 use mongodb::bson::uuid::Uuid;
+use crate::model::card::*;
 
-#[derive(Debug, Serialize, Deserialize)]
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Player {
     pub id: Uuid,
     pub name: String,
@@ -21,5 +23,10 @@ impl Player {
             last_updated: Utc::now(),
             cards: Vec::new()
         }
+    }
+
+    pub fn add_card (&mut self, mut new_card: Card) {
+        new_card.assign_owner(Some(self.id));
+        self.cards.push(new_card.get_id());
     }
 }

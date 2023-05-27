@@ -1,6 +1,8 @@
 use mongodb::bson::uuid::Uuid;
 use serde::{Serialize, Deserialize};
 use rand::prelude::*;
+use image::{Rgb};
+use imageproc::{definitions::{Image}};
 
 #[derive(Debug, Serialize, Deserialize)]
 enum Element {
@@ -82,11 +84,12 @@ pub struct Card {
     name: String,
     element: Element,
     skills: Skills,
+    image: Vec<u8>,
     owner_id: Option<Uuid>,
 }
 
 impl Card {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: String, image: Vec<u8>) -> Self {
         let mut rng = rand::thread_rng();
         let random_element = match rng.gen_range(0..=3) {
             0 => Element::Air,
@@ -100,11 +103,14 @@ impl Card {
             name,
             element: random_element,
             skills: Skills::new(),
+            image,
             owner_id: None,
         }
     }
-
-    pub fn assign_owner(mut self, owner_id: Uuid) {
-        self.owner_id = Some(owner_id);
+    pub fn get_id (&self) -> Uuid {
+        self.id
+    }
+    pub fn assign_owner(&mut self, owner_id: Option<Uuid>) {
+        self.owner_id = owner_id;
     }
 }

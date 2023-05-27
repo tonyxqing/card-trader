@@ -23,10 +23,10 @@ pub async fn add_player_to_db(db: &Database, p: Player) -> bool {
     
 }
 
-pub async fn update_player_to_db(db: &Database, id: Uuid, name: String) -> bool{
+pub async fn update_player_to_db(db: &Database, id: Uuid, name: String, cards: Vec<Uuid>) -> bool{
     let collection = db.collection::<Player>("players");
     let filter = doc! { "id":  id };
-    let result = collection.find_one_and_update(filter, doc! { "$set": { "name": name, "last_updated": Utc::now().to_string()}}, None).await.unwrap_or(None);
+    let result = collection.find_one_and_update(filter, doc! { "$set": { "name": name, "cards": cards,  "last_updated": Utc::now().to_string()}}, None).await.unwrap_or(None);
     println!("result was {:?} got edited", result);
     match result {
         Some(_) => true,
