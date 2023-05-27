@@ -79,13 +79,14 @@ impl Skill {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Card {
     id: Uuid,
+    name: String,
     element: Element,
     skills: Skills,
     owner_id: Option<Uuid>,
 }
 
 impl Card {
-    pub fn new() -> Self {
+    pub fn new(name: String) -> Self {
         let mut rng = rand::thread_rng();
         let random_element = match rng.gen_range(0..=3) {
             0 => Element::Air,
@@ -96,6 +97,7 @@ impl Card {
 
         Self {
             id: Uuid::new(),
+            name,
             element: random_element,
             skills: Skills::new(),
             owner_id: None,

@@ -4,6 +4,7 @@ use futures::stream::{StreamExt, TryStreamExt};
 use mongodb::{Database, bson::uuid::Uuid};
 use db::{Resolver, dbplayer::*};
 use model::player::*;
+use db::*;
 
 #[cfg(test)]
 mod tests {

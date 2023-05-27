@@ -23,9 +23,10 @@ async fn retreive_players(data: web::Data<AppState>) -> impl Responder {
 }
 
 #[get("/players/{player_id}")]
-async fn retreive_one_player(data: web::Data<AppState>) -> impl Responder {
-    let players = fetch_players_from_db(&data.r.lock().unwrap().db).await.unwrap_or(Vec::new());
-    HttpResponse::Ok().json(players)
+async fn retreive_one_player(data: web::Data<AppState>, id: web::Path<String>) -> impl Responder {
+    println!("Retrieving player {}", id);
+    let player = fetch_one_player_from_db(&data.r.lock().unwrap().db, Uuid::parse_str(id.into_inner()).unwrap()).await;
+    HttpResponse::Ok().json(player.unwrap())
 }
 
 #[derive(Deserialize)]
@@ -89,9 +90,12 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
+            .wrap(Logger::default())
+            .wrap(Logger::new("%a %{User-Agent}i"))
             .app_data(initial_state.clone())
             .service(hello_world)
             .service(retreive_players)
+            .service(retreive_one_player)
             .service(create_player)
             .service(delete_player)
             .service(edit_player)
