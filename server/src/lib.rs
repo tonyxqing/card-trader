@@ -2,7 +2,7 @@ pub mod model;
 pub mod db;
 use futures::stream::{StreamExt, TryStreamExt};
 use mongodb::{Database, bson::uuid::Uuid};
-use db::*;
+use db::{Resolver, dbplayer::*};
 use model::player::*;
 
 #[cfg(test)]

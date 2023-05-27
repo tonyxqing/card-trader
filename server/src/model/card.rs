@@ -55,7 +55,9 @@ impl Skill {
     }  
 
     fn level_up (&mut self) {
-       self.level += 1;
+        if self.level != u8::MAX {
+            self.level += 1;
+        }
     }
 
     fn increase_experience(&mut self, exp: u8) {

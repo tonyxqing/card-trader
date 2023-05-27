@@ -1,16 +1,12 @@
 mod model;
 mod db;
-use futures::stream::StreamExt;
 use actix_cors::Cors;
 use actix_web::{get, post, delete, put, http, Error, error, web, App, HttpRequest, HttpResponse, HttpServer, Responder, middleware::Logger};
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use mongodb::bson::{uuid::Uuid};
-use succ_api::db::update_player_to_db;
 use std::sync::Mutex;
 use model::player::*;
-use db::*;
-use chrono::prelude::*;
-use serde_json;
+use db::{Resolver, dbplayer::*};
 use env_logger;
 use serde::Deserialize;
 
