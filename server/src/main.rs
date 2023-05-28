@@ -19,7 +19,6 @@ const IMG_HEIGHT: u32 = 350;
 
 #[get("/dog-picture")]
 async fn fetch_dog_picture(data: web::Data<AppState>) -> Result<HttpResponse, Error> {
-    let mut selected_player = data.selected_player.lock().unwrap();
     let url = "https://dog.ceo/api/breeds/image/random";
 
     let response = reqwest::get(url).await.map_err(|e|ErrorBadRequest("err"))?;
@@ -37,12 +36,8 @@ async fn fetch_dog_picture(data: web::Data<AppState>) -> Result<HttpResponse, Er
     match image {
         Ok(picture) => {
             picture.resize_exact(IMG_WIDTH, IMG_HEIGHT, image::imageops::Nearest).write_to(&mut Cursor::new(&mut picture_bytes), image::ImageOutputFormat::Png).map_err(|e| ErrorBadRequest("Could not load my picture"))?;
-            
             let card = Card::new("card_name".to_string(), picture_bytes.clone());
-            let player = selected_player.as_mut().unwrap();
-            player.add_card(card);
             add_card_to_db(&data.r.lock().unwrap().db, card);
-            println!("Added card to Player: {:?}", player);
             Ok(HttpResponse::Ok()
             .content_type("image/jpeg")
             .body(picture_bytes))
@@ -65,11 +60,6 @@ async fn fetch_my_picture() -> Result<HttpResponse, Error> {
         .body(picture_bytes))
 }
 
-#[get("/")]
-async fn hello_world() -> impl Responder {
-    HttpResponse::Ok().body("Hello World!")
-}
-
 #[get("/players")]
 async fn retreive_players(data: web::Data<AppState>) -> impl Responder {
     let players = fetch_players_from_db(&data.r.lock().unwrap().db).await.unwrap_or(Vec::new());
@@ -78,11 +68,7 @@ async fn retreive_players(data: web::Data<AppState>) -> impl Responder {
 
 #[get("/players/{player_id}")]
 async fn retreive_one_player(data: web::Data<AppState>, id: web::Path<String>) -> impl Responder {
-    let mut selected_player = data.selected_player.lock().unwrap();
-    println!("Retrieving player {}", id);
     let player = fetch_one_player_from_db(&data.r.lock().unwrap().db, Uuid::parse_str(id.into_inner()).unwrap()).await;
-    *selected_player = player.clone();
-    println!("Selected Player: {:?}", selected_player);
     HttpResponse::Ok().json(player.unwrap())
 }
 
@@ -120,7 +106,6 @@ async fn delete_player(data: web::Data<AppState>, id: web::Path<String>) -> impl
 
 struct AppState {
     r: Mutex<Resolver>,
-    selected_player: Mutex<Option<Player>>,
 }
 
 #[actix_web::main]
@@ -138,7 +123,6 @@ async fn main() -> std::io::Result<()> {
 
     let initial_state = web::Data::new(AppState {
         r: Mutex::new(Resolver::new().await),
-        selected_player: Mutex::new(None)
     });
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -153,7 +137,6 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .wrap(Logger::new("%a %{User-Agent}i"))
             .app_data(initial_state.clone())
-            .service(hello_world)
             .service(retreive_players)
             .service(retreive_one_player)
             .service(create_player)
