@@ -4,16 +4,15 @@ use rand::prelude::*;
 use image::{Rgb};
 use imageproc::{definitions::{Image}};
 
-#[derive(Debug, Serialize, Deserialize)]
-enum Element {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum Element {
     Fire,
     Water,
     Air,
     Earth,
 }
-#[derive(Debug, Serialize, Deserialize)]
-
-struct Skills {
+#[derive(Debug, Serialize, Deserialize,Clone)]
+pub struct Skills {
     attack: Skill,
     defense: Skill,
     strength: Skill,
@@ -33,8 +32,7 @@ impl Skills {
 
     
 }
-#[derive(Debug, Serialize, Deserialize)]
-
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct Skill {
     level: u8,
     experience: u32,
@@ -78,14 +76,14 @@ impl Skill {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Card {
-    id: Uuid,
-    name: String,
-    element: Element,
-    skills: Skills,
-    image: Vec<u8>,
-    owner_id: Option<Uuid>,
+    pub id: Uuid,
+    pub name: String,
+    pub element: Element,
+    pub skills: Skills,
+    pub image: Vec<u8>,
+    pub owner_id: Option<Uuid>,
 }
 
 impl Card {

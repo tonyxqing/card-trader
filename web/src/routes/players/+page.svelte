@@ -13,6 +13,7 @@
         id: string,
         name: string,
         element: string,
+        image: string,
         skills: Skills,
         owner_id: string
     }
@@ -30,15 +31,55 @@
             method: "GET",
         });
         const data = await req.json();
+        console.log(data);
         players = data;
     }
 
-    async function get_player(id: string) {
-        const req = await fetch(`https://localhost:8080/players/${id}`, {
+    async function get_player(player_id: string) {
+        const req = await fetch(`https://localhost:8080/players/${player_id}`, {
             method: "GET",
         });
         const data = await req.json();
         return data;
+    }
+
+    async function add_card(player_id: string, files: any) {
+        const req = await fetch(`https://localhost:8080/players/${player_id}/cards`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({owner_id: player_id, files}),
+        })
+        const data = await req.json();
+        selected_cards = await fetch_player_cards(player_id)
+
+    }
+
+    async function fetch_player_cards(id: string) {
+        const req = await fetch(`https://localhost:8080/players/${id}/cards`, {
+            method: "GET",
+        });
+        const data = await req.json();
+
+        for (let d in data) {
+
+            const byteArray = new Uint8Array(data[d].image);
+    
+            // Convert the byte array to a Blob
+            const blob = new Blob([byteArray], { type: 'image/jpeg' });
+    
+            // Create an object URL for the Blob
+            const imageUrl = URL.createObjectURL(blob);
+            data[d].image = imageUrl;
+            console.log(data[d]);
+        }
+        return data;
+    }
+    async function delete_card(id: string) {
+        const req = fetch(`https://localhost:8080/cards/{$id}`, {
+            method: "DELETE",
+        })
     }
 
     async function add_player(name: string) {
@@ -54,10 +95,6 @@
     async function delete_player(id: string) {
         const req = await fetch(`https://localhost:8080/players/${id}`, {
             method: "DELETE",
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: player_name })
         });
         get_players()
     }
@@ -77,7 +114,9 @@
     let player_name = "";
     let card_name = "";
     let selected_player: Player;
+    let selected_cards: Card[];
     let players: Player[] = [];
+    let files: any;
 </script>
 
 <h1>Welcome to Player Admin Portal</h1>
@@ -93,20 +132,20 @@
     </div>
     {#each players as player}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="player_row" on:click={async () => {selected_player = await get_player(player.id)}}>    
+    <div class="player_row" on:click={async () => {selected_player = await get_player(player.id); selected_cards = await fetch_player_cards(selected_player.id)}}>    
             <span>
                 <input bind:value={player.name}>
             </span>
             <p>{player.id}</p>
             <p>{player.date_created}</p>
             <p>{player.last_updated}</p>
-            <span>
-                <button on:click={() => delete_player(player.id)}>delete</button>
-            </span>
-            <span>
-                <button on:click={() => edit_player(player.id, player)}>update</button>
-            </span>
         </div>
+        <span>
+            <button on:click={() => delete_player(player.id)}>delete</button>
+        </span>
+        <span>
+            <button on:click={() => edit_player(player.id, player)}>update</button>
+        </span>
     {/each}
     {/if}
     <div class="player_row">
@@ -129,20 +168,36 @@
         <p>{selected_player.name}</p>
         <p>{selected_player.id}</p>
     </div>
+    {#if selected_cards}
     <div class="selected_player_row">
-        {#each selected_player.cards as card}
+        <p>Card Name</p>
+        <p>Card ID</p>
+        <p>Element</p>
+        <p>Image</p>
+    </div>
+    {#each selected_cards as card}
+        <div class="selected_player_row">
             <p>{card.name}</p>
-        {/each}
+            <p>{card.id}</p>
+            <p>{card.element}</p>
+            <p><img src={card.image} alt=""></p>
+            <span>
+                <button on:click={() => delete_card(card.id)}>delete</button>
+            </span>
+            <span>
+                <!-- <button on:click={() => edit_card(card.id, card)}>update</button> -->
+            </span>
+        </div>
+    {/each}
         <span>
             <input type="text" bind:value={card_name}>
-            <button on:click={()=>{}}>add card</button>
+            <button on:click={async ()=>{await add_card(selected_player.id, files); }}>add card</button>
         </span>
         <span>
             <label for="card_picture">Add card picture</label>
-            <input style="opacity: 0" id="card_picture" type="file" accept=".jpg, .jpeg, .png" >
+            <input style="opacity: 0" id="card_picture" type="file" accept=".jpg, .jpeg, .png" bind:files={files}>
         </span>
-    </div>
-
+    {/if}
 {/if}
 </div>
 <style>
