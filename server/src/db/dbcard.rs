@@ -1,6 +1,11 @@
-use crate::model::card::*;
+use std::io::Cursor;
+use crate::{model::card::*};
+use actix_web::error::ErrorBadRequest;
 use futures::stream::{TryStreamExt};
 use mongodb::{Database, bson::{doc, uuid::Uuid, Binary, to_bson}, error::Error};
+use image::{DynamicImage, ImageBuffer};
+
+use super::dbplayer::{fetch_one_player_from_db, update_player_to_db};
 
 pub async fn fetch_cards_for_player_from_db(db: &Database, player_id: Uuid) -> Result<Vec<Card>, Error>  {
     let collection = db.collection::<Card>("cards");
@@ -34,36 +39,55 @@ pub async fn fetch_one_card_from_db(db: &Database, id: Uuid) -> Result<Option<Ca
 
 }
 
-pub async fn add_card_to_db(db: &Database, c: Card) -> bool {
-    println!("adding new card to the db: {:?}", c);
+pub async fn add_card_to_db(db: &Database, c: &Card) -> bool {
     let collection = db.collection::<Card>("cards");
     let result = collection.insert_one(c, None).await;
     match result {
         Ok(_) => true,
         Err(_) => false,
     }
-
 }
 
 pub async fn remove_card_from_db (db: &Database, id: Uuid) -> bool {
     let collection = db.collection::<Card>("cards");
+    
     let filter = doc! {"id": id};
     let result = collection.find_one_and_delete(filter, None).await;
+    
     match result {
-        Ok(_) => true,
+        Ok(card) => {
+            if let Some(c) = card {
+             let player = fetch_one_player_from_db(db, c.owner_id.unwrap()).await;
+                if let Some(mut p) = player {
+                    p.cards.retain(|x| *x !=  c.id);
+                    return update_player_to_db(db, p.id, p.name, p.cards).await
+                } else {
+                    return false
+                }
+            } else {
+                return false
+            }
+        },
         Err(_) => false,
-    }}
+    }
+}
 
 pub async fn update_card_in_db (db: &Database, id: Uuid, name: String, image: Vec<u8>, element: Element, skills: Skills, owner_id: Option<Uuid>) -> bool {
+    println!("Updating card -> name: {}, element: {:?}, skills: {:?}, owner_id: {:?}", name, element, skills, owner_id);
     let collection = db.collection::<Card>("cards");
     let filter = doc! {"id": id};
-    let binary = Binary {
-        subtype: mongodb::bson::spec::BinarySubtype::Generic,
-        bytes: image
-    };
+
+    let image  = image::load_from_memory(&image).expect("Did not load image from memory properly");
+    let mut new_image = Vec::new();
+    image.resize_exact(250, 350, image::imageops::FilterType::Nearest).write_to(
+        &mut Cursor::new(&mut new_image),
+        image::ImageOutputFormat::Png,
+    ).expect("Could not resize picture");
+
+    let bson_image = to_bson(&new_image).expect("Did not serialize image from card");
     let bson_element = to_bson(&element).expect("Element not found when updating card");
     let bson_skills = to_bson(&skills).expect("Skills not found when updating player");
-    let update = doc!{ "$set": {"name": name, "image": binary, "element": bson_element, "skills": bson_skills, "owner_id": owner_id }};
+    let update = doc!{ "$set": {"name": name, "image": bson_image, "element": bson_element, "skills": bson_skills, "owner_id": owner_id }};
     let result = collection.find_one_and_update(filter, update, None).await;
     match result {
         Ok(_) => true,
