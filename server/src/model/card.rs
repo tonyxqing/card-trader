@@ -49,7 +49,7 @@ impl Skill {
     fn exp_to_next_level(level: u8) -> u32 {
         let mut needed_exp = 0;
         for n in 1..level {
-            needed_exp += n as u32 +  f32::powf(2.0, n as f32 / 5.0) as u32;
+            needed_exp += n as u32 +  (50 * f32::powf(2.0, n as f32 / 5.0) as u32);
         }
         needed_exp
     }  
@@ -57,22 +57,27 @@ impl Skill {
     fn level_up (&mut self) {
         if self.level != u8::MAX {
             self.level += 1;
+            self.experience = 0;
         }
     }
 
-    fn increase_experience(&mut self, exp: u8) {
-        self.experience += exp as u32;
+    fn increase_experience(&mut self, exp: u32) {
+        self.experience += exp;
         if self.can_level_up() {
             self.level_up();
         }
     }
 
-    fn can_level_up(&self) -> bool {
-        let mut total_exp_needed: u32 = 0;
-        for level in 1..self.level - 1 {
+    fn total_experience(&self) -> u32 {
+        let mut total_exp_needed: u32 = self.experience;
+        for level in 1..self.level {
             total_exp_needed += Self::exp_to_next_level(level);
         }
-        self.experience > total_exp_needed
+        total_exp_needed
+    }
+
+    fn can_level_up(&self) -> bool {
+        self.experience > Self::exp_to_next_level(self.level + 1)
     }
 }
 
