@@ -13,9 +13,10 @@
         id: string,
         name: string,
         element: string,
-        image: string,
+        image: number[],
         skills: Skills,
-        owner_id: string
+        owner_id: string,
+        imageUrl: string,
     }
     
     type Player = { 
@@ -31,7 +32,6 @@
             method: "GET",
         });
         const data = await req.json();
-        console.log(data);
         players = data;
     }
 
@@ -43,17 +43,39 @@
         return data;
     }
 
-    async function add_card(player_id: string, files: any) {
+    async function add_card(player_id: string, name: string, files: any) {
         const req = await fetch(`https://localhost:8080/players/${player_id}/cards`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({owner_id: player_id, files}),
+            body: JSON.stringify({name, image: files}),
         })
         const data = await req.json();
-        selected_cards = await fetch_player_cards(player_id)
+        selected_cards = [...selected_cards, data];
+        console.log(selected_cards, data);
+        return data;
 
+    }
+    async function fetch_one_card(card_id: string) {
+        const req = await fetch(`https://localhost:8080/cards/${card_id}`, {
+            method: "GET",
+        })
+
+        const data = await req.json();
+        const imageUrl = getImageUrl(data.image);
+        data.imageUrl = imageUrl;
+        return data;
+    }
+
+    function getImageUrl(image: number[]) {
+        const byteArray = new Uint8Array(image);
+    
+        // Convert the byte array to a Blob
+        const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+        // Create an object URL for the Blob
+        return URL.createObjectURL(blob);
     }
 
     async function fetch_player_cards(id: string) {
@@ -63,22 +85,30 @@
         const data = await req.json();
 
         for (let d in data) {
-
-            const byteArray = new Uint8Array(data[d].image);
-    
-            // Convert the byte array to a Blob
-            const blob = new Blob([byteArray], { type: 'image/jpeg' });
-    
-            // Create an object URL for the Blob
-            const imageUrl = URL.createObjectURL(blob);
-            data[d].image = imageUrl;
-            console.log(data[d]);
+            const imageUrl = getImageUrl(data[d].image);
+            data[d].imageUrl = imageUrl;
         }
-        return data;
+        selected_cards = data;
     }
-    async function delete_card(id: string) {
-        const req = fetch(`https://localhost:8080/cards/{$id}`, {
+    async function delete_card(card_id: string) {
+        const req = await fetch(`https://localhost:8080/cards/${card_id}`, {
             method: "DELETE",
+        })
+    }
+
+    async function edit_card(card_id: string, card: Card) {
+        const req = await fetch(`https://localhost:8080/cards/${card_id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: card.name,
+                image: card.image,
+                skills: card.skills,
+                element: card.element,
+                owner_id: card.owner_id,
+            }),
         })
     }
 
@@ -110,13 +140,17 @@
         get_players()
 
     }
+
     get_players();
+    let selected_files: any = [];
     let player_name = "";
     let card_name = "";
     let selected_player: Player;
     let selected_cards: Card[];
     let players: Player[] = [];
     let files: any;
+    let files_image: number[];
+    $: console.log(selected_files);
 </script>
 
 <h1>Welcome to Player Admin Portal</h1>
@@ -132,20 +166,20 @@
     </div>
     {#each players as player}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="player_row" on:click={async () => {selected_player = await get_player(player.id); selected_cards = await fetch_player_cards(selected_player.id)}}>    
+    <div class="player_row" on:click={async () => {selected_player = await get_player(player.id); await fetch_player_cards(selected_player.id)}}>    
             <span>
                 <input bind:value={player.name}>
             </span>
             <p>{player.id}</p>
             <p>{player.date_created}</p>
             <p>{player.last_updated}</p>
+            <span>
+                <button on:click={(e) => {delete_player(player.id); e.stopPropagation();}}>delete</button>
+            </span>
+            <span>
+                <button on:click={(e) => {edit_player(player.id, player); e.stopPropagation();}}>update</button>
+            </span>
         </div>
-        <span>
-            <button on:click={() => delete_player(player.id)}>delete</button>
-        </span>
-        <span>
-            <button on:click={() => edit_player(player.id, player)}>update</button>
-        </span>
     {/each}
     {/if}
     <div class="player_row">
@@ -173,36 +207,110 @@
         <p>Card Name</p>
         <p>Card ID</p>
         <p>Element</p>
+        <p>Skills</p>
         <p>Image</p>
     </div>
-    {#each selected_cards as card}
+    {#each selected_cards as card, i}
         <div class="selected_player_row">
-            <p>{card.name}</p>
-            <p>{card.id}</p>
-            <p>{card.element}</p>
-            <p><img src={card.image} alt=""></p>
             <span>
-                <button on:click={() => delete_card(card.id)}>delete</button>
+                <input bind:value={selected_cards[i].name}>
+            </span>
+            <p>{card.id}</p>
+            <p><select bind:value={selected_cards[i].element}>
+                <option>Air</option>
+                <option>Water</option>
+                <option>Earth</option>
+                <option>Fire</option>
+            </select></p>
+            <span class="stack">
+                <div>
+
+                        <p>hitpoints: <input type="number" bind:value={selected_cards[i].skills.hitpoints.level}></p>
+                        <p>attack: <input type="number" bind:value={selected_cards[i].skills.attack.level}></p>
+                        <p>strength: <input type="number" bind:value={selected_cards[i].skills.strength.level}></p>
+                        <p>defense: <input type="number" bind:value={selected_cards[i].skills.defense.level}></p>
+                    
+                </div>
+                <div>
+
+                        <p>hitpoints: <input type="number" bind:value={selected_cards[i].skills.hitpoints.experience}></p>
+                        <p>attack: <input type="number" bind:value={selected_cards[i].skills.attack.experience}></p>
+                        <p>strength: <input type="number" bind:value={selected_cards[i].skills.strength.experience}></p>
+                        <p>defense: <input type="number" bind:value={selected_cards[i].skills.defense.experience}></p>
+                </div>
+
+            </span>
+            <label for={`selected_card_picture-${i}`}><img src={selected_files[i] ? URL.createObjectURL(selected_files[i][0]) :  getImageUrl(card.image)} alt=""></label>
+            <input on:change={(event) => {
+                const file = event.target.files[0]; // Get the selected file
+                const reader = new FileReader(); // Create a FileReader object
+        
+                // Set up the onload event handler
+                reader.onload = function (event) {
+                    const arrayBuffer = event.target.result; // Get the ArrayBuffer
+        
+                    // Create a Uint8Array from the ArrayBuffer
+                    const uint8Array = new Uint8Array(arrayBuffer);
+
+                    selected_cards[i].image = Array.from(uint8Array);
+                    selected_cards[i].imageUrl = getImageUrl(selected_cards[i].image);
+                };
+                    reader.readAsArrayBuffer(file);
+                }} style="display: none" id={`selected_card_picture-${i}`} type="file" accept=".jpg, .jpeg, .png" bind:files={selected_files[i]}>
+            
+            <span>
+                <button on:click={async () => {selected_files[i] = null; selected_cards.splice(i, 1); selected_files.splice(i, 1); await delete_card(card.id);}}>delete</button>
             </span>
             <span>
-                <!-- <button on:click={() => edit_card(card.id, card)}>update</button> -->
+                <button on:click={async () => { 
+                     await edit_card(card.id, card); selected_cards[i] = await fetch_one_card(card.id); if (selected_files[i]){ selected_files[i] = null;}}}>update</button>
             </span>
         </div>
     {/each}
         <span>
             <input type="text" bind:value={card_name}>
-            <button on:click={async ()=>{await add_card(selected_player.id, files); }}>add card</button>
+            <button on:click={async () => {  await add_card(selected_player.id, card_name,  files_image ?? []);  }}>add card</button>
         </span>
         <span>
-            <label for="card_picture">Add card picture</label>
-            <input style="opacity: 0" id="card_picture" type="file" accept=".jpg, .jpeg, .png" bind:files={files}>
+            <label for="card_picture">Add card picture <img src={getImageUrl(files_image)} alt=""/></label>
+            <input style="display: none" id="card_picture" type="file" accept=".jpg, .jpeg, .png" bind:files={files} on:change={(event) => {
+                const file = event.target.files[0]; // Get the selected file
+                const reader = new FileReader(); // Create a FileReader object
+        
+                // Set up the onload event handler
+                reader.onload = function (event) {
+                    const arrayBuffer = event.target.result; // Get the ArrayBuffer
+        
+                    // Create a Uint8Array from the ArrayBuffer
+                    const uint8Array = new Uint8Array(arrayBuffer);
+        
+                    // Use the Uint8Array for further processing
+                    // (e.g., send it to a server, process it with JavaScript, etc.)
+                    files_image = Array.from(uint8Array);
+                };
+        
+                // Read the selected file as an ArrayBuffer
+                reader.readAsArrayBuffer(file);}}>
         </span>
     {/if}
 {/if}
 </div>
 <style>
+.stack {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
 
+.stack > div {
+    display: flex;
+}
+img {
+    max-width: 250px;
+    max-height:350px;
+}
 .table-container {
+    
     display: table;
     width: 100%;
     }
@@ -218,13 +326,14 @@
 
     .selected_player_table {
         display: table;
-    width: 100%;
+        width: 100%;
 
     }
     .selected_player_row {
         display: table-row;
     }
-    .selected_player_row * {
+    .selected_player_row  > * {
+        vertical-align: top;
         display:table-cell;
         padding: 10px;
         border: 1px solid black;
