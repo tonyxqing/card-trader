@@ -15,7 +15,7 @@ use crate::{
 
 #[get("/players")]
 pub async fn retreive_players(data: web::Data<AppState>) -> impl Responder {
-    let players = fetch_players_from_db(&data.r.lock().unwrap().db)
+    let players = fetch_players_from_db(&data.r.try_lock().unwrap().db)
         .await
         .unwrap_or(Vec::new());
     HttpResponse::Ok().json(players)
@@ -27,7 +27,7 @@ pub async fn retreive_one_player(
     id: web::Path<String>,
 ) -> impl Responder {
     let player = fetch_one_player_from_db(
-        &data.r.lock().unwrap().db,
+        &data.r.try_lock().unwrap().db,
         Uuid::parse_str(id.into_inner()).unwrap(),
     )
     .await;
@@ -45,7 +45,7 @@ pub async fn create_player(
 ) -> Result<HttpResponse, Error> {
     println!("Welcome {}!", response.name);
     if add_player_to_db(
-        &data.r.lock().unwrap().db,
+        &data.r.try_lock().unwrap().db,
         Player::new(response.name.clone()),
     )
     .await
@@ -68,7 +68,7 @@ pub async fn edit_player(
 ) -> impl Responder {
     println!("Editing {}!", response.name);
     update_player_to_db(
-        &data.r.lock().unwrap().db,
+        &data.r.try_lock().unwrap().db,
         Uuid::parse_str(id.into_inner()).unwrap(),
         response.name.clone(),
         response.cards.clone(),
@@ -79,11 +79,13 @@ pub async fn edit_player(
 
 #[delete("/players/{player_id}")]
 pub async fn delete_player(data: web::Data<AppState>, id: web::Path<String>) -> impl Responder {
-    println!("Goodbye {}", id);
-    remove_player_from_db(
-        &data.r.lock().unwrap().db,
-        Uuid::parse_str(id.into_inner()).unwrap(),
-    )
-    .await;
-    HttpResponse::Ok().body("Removed User".to_string())
+    println!("About to remove player");
+    let guard = data.r.try_lock().unwrap();
+    let db = &guard.db;
+    println!("Aquired Mutex");
+    if remove_player_from_db(db, Uuid::parse_str(id.into_inner()).unwrap()).await {
+        HttpResponse::Ok().body("Removed User".to_string())
+    } else {
+        HttpResponse::Ok().body("Not able to Remove User".to_string())
+    }    
 }

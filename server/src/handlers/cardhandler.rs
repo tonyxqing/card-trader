@@ -10,7 +10,7 @@ use super::AppState;
 
 #[get("/cards")]
 pub async fn retrieve_cards(data: web::Data<AppState>, id: web::Path<String>) -> impl Responder{
-    let db = &data.r.lock().unwrap().db;
+    let db = &data.r.try_lock().unwrap().db;
     let cards = fetch_cards_from_db(db).await.unwrap_or(Vec::new());
     
     HttpResponse::Ok().json(cards)
@@ -23,7 +23,7 @@ pub struct CreateCard {
 }
 #[post("/cards")]
 pub async fn create_card(data: web::Data<AppState>, request: web::Json<CreateCard>) -> impl Responder{
-    let db = &data.r.lock().unwrap().db;
+    let db = &data.r.try_lock().unwrap().db;
     let card = Card::new(request.name.clone(), request.image.clone());
     let result = add_card_to_db(db, &card).await;
     
@@ -36,7 +36,7 @@ pub async fn create_card(data: web::Data<AppState>, request: web::Json<CreateCar
 
 #[get("/players/{player_id}/cards")]
 pub async fn retreive_player_cards(data: web::Data<AppState>, id: web::Path<String>) -> impl Responder {
-    let db = &data.r.lock().unwrap().db;
+    let db = &data.r.try_lock().unwrap().db;
     let player = fetch_one_player_from_db(db, Uuid::parse_str(id.into_inner()).unwrap()).await;
     if let Some(p) = player {
         let cards = fetch_cards_for_player_from_db(db, p.id).await.expect("Could not retrieve Cards for Player from Db");
@@ -55,22 +55,21 @@ pub struct CreatePlayerCard {
 
 #[post("/players/{player_id}/cards")]
 pub async fn create_card_for_player (data: web::Data<AppState>, id: web::Path<String>, request: web::Json<CreatePlayerCard>) -> Result<HttpResponse, Error> {
-    println!("Request looks like {:?}", request.image);
-    let db = &data.r.lock().unwrap().db;
+    let db = &data.r.try_lock().unwrap().db;
     let mut new_image = Vec::new();
     let image  =  if request.image.len() > 0 {
         image::load_from_memory(&request.image)
     } else {
         let url = "https://dog.ceo/api/breeds/image/random";
-        let response = reqwest::get(url).await.map_err(|e|ErrorBadRequest("err"))?;
-        let json = response.json::<serde_json::Value>().await.map_err(|e|ErrorBadRequest("err"))?;
+        let response = reqwest::get(url).await.map_err(|e|ErrorBadRequest("GET request to dog resource failed"))?;
+        let json = response.json::<serde_json::Value>().await.map_err(|e|ErrorBadRequest("deserializing response from JSON failed"))?;
         let picture_url = json["message"].as_str().unwrap();
         
-        let picture_response = reqwest::get(picture_url).await.map_err(|e|ErrorBadRequest("err"))?;
-        let picture_bytes = picture_response.bytes().await.map_err(|e|ErrorBadRequest("err"))?;
+        let picture_response = reqwest::get(picture_url).await.map_err(|e|ErrorBadRequest("GET request to dog image failed"))?;
+        let picture_bytes = picture_response.bytes().await.map_err(|e|ErrorBadRequest("Could not get picture response bytes"))?;
         let cursor = std::io::Cursor::new(picture_bytes);
         
-        image::load(cursor, image::ImageFormat::from_path(picture_url).map_err(|e|ErrorBadRequest("err"))?)
+        image::load(cursor, image::ImageFormat::from_path(picture_url).map_err(|e|ErrorBadRequest("Failed loading the image from the path"))?)
     };
     
     let player = fetch_one_player_from_db(db, Uuid::parse_str(id.into_inner()).unwrap()).await;
@@ -97,7 +96,7 @@ pub async fn create_card_for_player (data: web::Data<AppState>, id: web::Path<St
 
 #[get("/cards/{card_id}")]
 pub async fn retrieve_one_card(data: web::Data<AppState>, id: web::Path<String>) -> impl Responder{
-    let db = &data.r.lock().unwrap().db;
+    let db = &data.r.try_lock().unwrap().db;
     let card = fetch_one_card_from_db(db, Uuid::parse_str(id.into_inner()).unwrap()).await.unwrap_or(None);
 
     HttpResponse::Ok().json(card)
@@ -112,14 +111,14 @@ pub struct UpdateCard {
 }
 #[put("/cards/{card_id}")]
 pub async fn update_card(data: web::Data<AppState>, id: web::Path<String>, request: web::Json<UpdateCard>) -> impl Responder{
-    let db = &data.r.lock().unwrap().db;
+    let db = &data.r.try_lock().unwrap().db;
     update_card_in_db(db, Uuid::parse_str(id.into_inner()).unwrap(), request.name.clone(), request.image.clone(), request.element.clone(), request.skills.clone(), request.owner_id.clone()).await;
 
     HttpResponse::Ok()
 }
 #[delete("/cards/{card_id}")]
 pub async fn delete_card(data: web::Data<AppState>, id: web::Path<String>) -> impl Responder{
-    let db = &data.r.lock().unwrap().db;
+    let db = &data.r.try_lock().unwrap().db;
     remove_card_from_db(db, Uuid::parse_str(id.into_inner()).unwrap()).await;
     HttpResponse::Ok()
 }

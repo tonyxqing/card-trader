@@ -53,17 +53,21 @@ pub async fn remove_card_from_db (db: &Database, id: Uuid) -> bool {
     
     let filter = doc! {"id": id};
     let result = collection.find_one_and_delete(filter, None).await;
-    
+    println!("deleted card");
     match result {
         Ok(card) => {
             if let Some(c) = card {
-             let player = fetch_one_player_from_db(db, c.owner_id.unwrap()).await;
-                if let Some(mut p) = player {
-                    p.cards.retain(|x| *x !=  c.id);
-                    return update_player_to_db(db, p.id, p.name, p.cards).await
-                } else {
-                    return false
-                }
+             if let Some(id) = c.owner_id {
+                 let player = fetch_one_player_from_db(db, id).await;
+                    if let Some(mut p) = player {
+                        p.cards.retain(|x| *x !=  c.id);
+                        return update_player_to_db(db, p.id, p.name, p.cards).await
+                    } else {
+                        return false
+                    }
+             } else {
+                false
+             }
             } else {
                 return false
             }
@@ -83,12 +87,15 @@ pub async fn update_card_in_db (db: &Database, id: Uuid, name: String, image: Ve
         &mut Cursor::new(&mut new_image),
         image::ImageOutputFormat::Png,
     ).expect("Could not resize picture");
-
+    
     let bson_image = to_bson(&new_image).expect("Did not serialize image from card");
     let bson_element = to_bson(&element).expect("Element not found when updating card");
     let bson_skills = to_bson(&skills).expect("Skills not found when updating player");
     let update = doc!{ "$set": {"name": name, "image": bson_image, "element": bson_element, "skills": bson_skills, "owner_id": owner_id }};
+    println!("Serializing to BSON");
     let result = collection.find_one_and_update(filter, update, None).await;
+    println!("Result");
+    
     match result {
         Ok(_) => true,
         Err(_) => false,

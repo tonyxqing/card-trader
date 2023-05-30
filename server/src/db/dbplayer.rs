@@ -1,4 +1,4 @@
-use mongodb::{bson::{doc, uuid::Uuid}, Database, error::{Error}};
+use mongodb::{bson::{doc, uuid::Uuid}, Database, error::{Error}, options::FindOneAndDeleteOptions};
 use futures::stream::TryStreamExt;
 use crate::{model::{player::*, card::Card}, db::dbcard::update_card_in_db};
 use chrono::prelude::*;
@@ -36,17 +36,23 @@ pub async fn update_player_to_db(db: &Database, id: Uuid, name: String, cards: V
 
 pub async fn remove_player_from_db(db: &Database, id: Uuid) -> bool {
     let collection = db.collection::<Player>("players");
-    let card_filter = doc! {"owner_id": id};
-    let mut cursor = db.collection::<Card>("cards").find(card_filter, None).await.expect("could not find cards");
-    while let Some(mut c) = cursor.try_next().await.expect("could not trynext cursor"){
-        c.assign_owner(None);
-        update_card_in_db(db, c.id, c.name, c.image, c.element, c.skills, c.owner_id).await;
-    }
+    let options = FindOneAndDeleteOptions::builder()
+        .max_time(Some(std::time::Duration::from_secs(5)))
+        .build();
 
     let filter = doc! { "id": id };
-    let result = collection.find_one_and_delete(filter, None).await.unwrap_or(None);
+    let result = collection.find_one_and_delete(filter, options).await.unwrap_or(None);    
     match result {
-        Some(_) => true,
+        Some(_) => {
+            let card_filter = doc! {"owner_id": id};
+            let mut cursor = db.collection::<Card>("cards").find(card_filter, None).await.expect("could not find cards");
+            while let Some(mut c) = cursor.try_next().await.expect("could not trynext cursor") {
+                c.assign_owner(None);
+                update_card_in_db(db, c.id, c.name, c.image, c.element, c.skills, c.owner_id).await;
+            }
+            println!("deleted player and cards, releasing mutex");
+            true
+        },
         None => false,
     }
 }

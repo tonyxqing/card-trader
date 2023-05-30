@@ -223,16 +223,16 @@
                 <option>Fire</option>
             </select></p>
             <span class="stack">
+                Level
                 <div>
-
                         <p>hitpoints: <input type="number" bind:value={selected_cards[i].skills.hitpoints.level}></p>
                         <p>attack: <input type="number" bind:value={selected_cards[i].skills.attack.level}></p>
                         <p>strength: <input type="number" bind:value={selected_cards[i].skills.strength.level}></p>
                         <p>defense: <input type="number" bind:value={selected_cards[i].skills.defense.level}></p>
                     
                 </div>
+                Expereience
                 <div>
-
                         <p>hitpoints: <input type="number" bind:value={selected_cards[i].skills.hitpoints.experience}></p>
                         <p>attack: <input type="number" bind:value={selected_cards[i].skills.attack.experience}></p>
                         <p>strength: <input type="number" bind:value={selected_cards[i].skills.strength.experience}></p>
