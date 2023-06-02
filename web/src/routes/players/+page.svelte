@@ -145,7 +145,7 @@
     let selected_files: any = [];
     let player_name = "";
     let card_name = "";
-    let selected_player: Player;
+    let selected_player: Player | null;
     let selected_cards: Card[];
     let players: Player[] = [];
     let files: any;
@@ -166,7 +166,7 @@
     </div>
     {#each players as player}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="player_row" on:click={async () => {selected_player = await get_player(player.id); await fetch_player_cards(selected_player.id)}}>    
+    <div class="player_row" on:click={async () => {selected_player = await get_player(player.id); if (selected_player) {await fetch_player_cards(selected_player.id)}}}>    
             <span>
                 <input bind:value={player.name}>
             </span>
@@ -174,7 +174,7 @@
             <p>{player.date_created}</p>
             <p>{player.last_updated}</p>
             <span>
-                <button on:click={(e) => {delete_player(player.id); e.stopPropagation();}}>delete</button>
+                <button on:click={async (e) => {if (player.id === selected_player?.id) {await delete_player(player.id); selected_cards = []; selected_player = null} else {await delete_player(player.id)} e.stopPropagation();}}>delete</button>
             </span>
             <span>
                 <button on:click={(e) => {edit_player(player.id, player); e.stopPropagation();}}>update</button>
@@ -191,7 +191,7 @@
         </span>
     </div>
 </div>
-
+<div class="spacer"/>
 <div class="selected_player_table">
 {#if selected_player}
 <div class="selected_player_row">
@@ -242,20 +242,24 @@
             </span>
             <label for={`selected_card_picture-${i}`}><img src={selected_files[i] ? URL.createObjectURL(selected_files[i][0]) :  getImageUrl(card.image)} alt=""></label>
             <input on:change={(event) => {
-                const file = event.target.files[0]; // Get the selected file
+                const file = event?.currentTarget?.files; // Get the selected file
                 const reader = new FileReader(); // Create a FileReader object
         
                 // Set up the onload event handler
                 reader.onload = function (event) {
-                    const arrayBuffer = event.target.result; // Get the ArrayBuffer
+                    const arrayBuffer = event?.target?.result; // Get the ArrayBuffer
         
-                    // Create a Uint8Array from the ArrayBuffer
-                    const uint8Array = new Uint8Array(arrayBuffer);
-
-                    selected_cards[i].image = Array.from(uint8Array);
-                    selected_cards[i].imageUrl = getImageUrl(selected_cards[i].image);
+                    // Create a Uint8Array from the ArrayBuffer 
+                    if (arrayBuffer && typeof(arrayBuffer) != "string") {
+                        const uint8Array = new Uint8Array(arrayBuffer);
+    
+                        selected_cards[i].image = Array.from(uint8Array);
+                        selected_cards[i].imageUrl = getImageUrl(selected_cards[i].image);
+                    }
                 };
-                    reader.readAsArrayBuffer(file);
+                if (file) {
+                    reader.readAsArrayBuffer(file[0]);
+                }
                 }} style="display: none" id={`selected_card_picture-${i}`} type="file" accept=".jpg, .jpeg, .png" bind:files={selected_files[i]}>
             
             <span>
@@ -269,33 +273,43 @@
     {/each}
         <span>
             <input type="text" bind:value={card_name}>
-            <button on:click={async () => {  await add_card(selected_player.id, card_name,  files_image ?? []);  }}>add card</button>
+            <button on:click={async () => {  if (selected_player) { await add_card(selected_player.id, card_name,  files_image ?? []);  }}}>add card</button>
         </span>
         <span>
             <label for="card_picture">Add card picture <img src={getImageUrl(files_image)} alt=""/></label>
             <input style="display: none" id="card_picture" type="file" accept=".jpg, .jpeg, .png" bind:files={files} on:change={(event) => {
-                const file = event.target.files[0]; // Get the selected file
+                const file = event?.currentTarget?.files; // Get the selected file
                 const reader = new FileReader(); // Create a FileReader object
         
                 // Set up the onload event handler
                 reader.onload = function (event) {
-                    const arrayBuffer = event.target.result; // Get the ArrayBuffer
+                    const arrayBuffer = event?.target?.result; // Get the ArrayBuffer
         
                     // Create a Uint8Array from the ArrayBuffer
-                    const uint8Array = new Uint8Array(arrayBuffer);
-        
-                    // Use the Uint8Array for further processing
-                    // (e.g., send it to a server, process it with JavaScript, etc.)
-                    files_image = Array.from(uint8Array);
+                    if (arrayBuffer && typeof(arrayBuffer) !== 'string') {
+                        const uint8Array = new Uint8Array(arrayBuffer);
+            
+                        // Use the Uint8Array for further processing
+                        // (e.g., send it to a server, process it with JavaScript, etc.)
+                        files_image = Array.from(uint8Array);
+                    }
                 };
         
                 // Read the selected file as an ArrayBuffer
-                reader.readAsArrayBuffer(file);}}>
+                if (file) {
+                    reader.readAsArrayBuffer(file[0]);
+                }
+                }
+                }>
         </span>
     {/if}
 {/if}
 </div>
+
 <style>
+.spacer {
+    height: 50px;
+}
 .stack {
     display: flex;
     flex-direction: column;
