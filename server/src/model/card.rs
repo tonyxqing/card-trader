@@ -19,6 +19,33 @@ pub struct Skills {
     hitpoints: Skill,
 }
 
+#[derive(Debug, Serialize, Deserialize,Clone)]
+
+pub enum Rarity {
+    Common, 
+    Uncommon,
+    Rare,
+    Ascended,
+    Legendary,
+    Mythic,
+    Cosmic,
+    Galactic,
+    Planetary,
+}
+
+
+#[derive(Debug, Serialize, Deserialize,Clone)]
+pub enum CardStyle {
+    Rookie,         // Rookie rarity represents cards of up-and-coming players who are making their professional debut or early in their careers. These cards may hold special significance for collectors.
+    AllStar,        // All-Star rarity represents cards of players who have been selected to participate in the All-Star Game, showcasing their exceptional skills and popularity.
+    HallOfFame,     // HallOfFame rarity represents cards of players who have been inducted into the Baseball Hall of Fame, symbolizing their legendary status in the sport.
+    Autograph,      // Autograph rarity represents cards that feature the authentic signature of the player. These cards are highly valued by collectors due to their personal connection with the player.
+    GameUsed,       // GameUsed rarity represents cards that contain actual pieces of game-worn equipment or memorabilia, such as jerseys, bats, or baseballs. These cards are considered unique and highly sought-after.
+    Parallel,       // Parallel rarity represents cards with special variants or editions, featuring different designs, colors, or finishes. These cards offer collectors additional options and variations to collect.
+    Vintage,        // Vintage rarity represents cards that are considered classics or from earlier eras of baseball. These cards may have historical significance or be of interest to collectors due to their age and rarity.
+    Relic,          // Relic rarity represents cards that contain embedded pieces of equipment, such as bat chips or jersey swatches. These cards are similar to GameUsed cards but focus on specific equipment components.
+    Error,          // Error rarity represents cards with printing or production errors, making them unique and collectible due to their rarity and novelty.
+}
 
 impl Skills {
     pub fn new() -> Self {
@@ -88,6 +115,9 @@ pub struct Card {
     pub element: Element,
     pub skills: Skills,
     pub image: Vec<u8>,
+    pub rarity: Rarity,
+    pub card_style: CardStyle,
+    pub wear: f32,
     pub owner_id: Option<Uuid>,
 }
 
@@ -101,12 +131,39 @@ impl Card {
             _ => Element::Water
         };
 
+        let random_rarity = match rng.gen_range(0..=1000) {
+            0..=400 => Rarity::Common,     // 40% chance
+            401..=600 => Rarity::Uncommon, // 20% chance
+            601..=750 => Rarity::Rare,     // 15% chance
+            751..=850 => Rarity::Ascended, // 10% chance
+            851..=925 => Rarity::Legendary,// 7.5% chance
+            926..=975 => Rarity::Mythic,   // 5% chance
+            976..=990 => Rarity::Cosmic,   // 1.5% chance
+            991..=997 => Rarity::Galactic, // 0.7% chance
+            _ => Rarity::Planetary,        // 0.3% chance
+        };
+
+        let random_card_style = match rng.gen_range(0..=1000) {
+            0..=50 => CardStyle::Rookie,        // 5% chance
+            51..=150 => CardStyle::AllStar,     // 10% chance
+            151..=300 => CardStyle::HallOfFame, // 15% chance
+            301..=450 => CardStyle::Autograph,  // 15% chance
+            451..=600 => CardStyle::GameUsed,   // 15% chance
+            601..=750 => CardStyle::Parallel,   // 15% chance
+            751..=850 => CardStyle::Vintage,    // 10% chance
+            851..=950 => CardStyle::Relic,      // 10% chance
+            _ => CardStyle::Error,              // 5% chance
+        };
+
         Self {
             id: Uuid::new(),
             name,
             element: random_element,
             skills: Skills::new(),
             image,
+            rarity: random_rarity,
+            card_style: random_card_style,
+            wear: rng.gen(),
             owner_id: None,
         }
     }
