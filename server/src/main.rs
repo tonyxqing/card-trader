@@ -6,7 +6,7 @@ use actix_web::{
     error::{ErrorBadRequest},
     get, 
     middleware::Logger,
-    web, App, Error, HttpResponse, HttpServer,
+    web, App, Error, HttpResponse, HttpRequest, HttpServer,
 };
 use db::Resolver;
 use env_logger;
@@ -15,9 +15,36 @@ use image::io::Reader as ImageReader;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use std::io::Cursor;
 use std::sync::Mutex;
+use actix_web_actors::ws;
+use actix::{Actor, StreamHandler};
 
 const IMG_WIDTH: u32 = 250;
 const IMG_HEIGHT: u32 = 350;
+
+struct MyWs;
+
+impl Actor for MyWs {
+    type Context = ws::WebsocketContext<Self>;
+}
+
+/// Handler for ws::Message message
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for MyWs {
+    fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
+        match msg {
+            Ok(ws::Message::Ping(msg)) => ctx.pong(&msg),
+            Ok(ws::Message::Text(text)) => ctx.text(text),
+            Ok(ws::Message::Binary(bin)) => ctx.binary(bin),
+            _ => (),
+        }
+    }
+}
+
+async fn index(req: HttpRequest, stream: web::Payload) -> Result<HttpResponse, Error> {
+    let resp = ws::start(MyWs {}, &req, stream);
+    println!("{:?}", resp);
+    resp
+}
+
 
 #[get("/my-picture")]
 async fn fetch_my_picture() -> Result<HttpResponse, Error> {
@@ -77,8 +104,9 @@ async fn main() -> std::io::Result<()> {
             .service(retrieve_one_card)
             .service(delete_card)
             .service(update_card)
+            .route("/ws/", web::get().to(index))
     })
-    .bind_openssl("127.0.0.1:8080", builder)?
+    .bind("127.0.0.1:8080")?
     .run()
     .await
 }

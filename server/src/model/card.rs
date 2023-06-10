@@ -3,6 +3,7 @@ use serde::{Serialize, Deserialize};
 use rand::prelude::*;
 use image::{Rgb};
 use imageproc::{definitions::{Image}};
+use rnglib::{RNG, Language};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Element {
@@ -11,16 +12,19 @@ pub enum Element {
     Air,
     Earth,
 }
-#[derive(Debug, Serialize, Deserialize,Clone)]
-pub struct Skills {
-    attack: Skill,
-    defense: Skill,
-    strength: Skill,
-    hitpoints: Skill,
+impl Element {
+    fn new() -> Self {
+        let mut rng = rand::thread_rng();
+        match rng.gen_range(0..=3) {
+            0 => Element::Air,
+            1 => Element::Earth,
+            2 => Element::Fire,
+            _ => Element::Water
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize,Clone)]
-
 pub enum Rarity {
     Common, 
     Uncommon,
@@ -31,6 +35,23 @@ pub enum Rarity {
     Cosmic,
     Galactic,
     Planetary,
+}
+
+impl Rarity {
+    fn new() -> Self {
+        let mut rng = rand::thread_rng();
+        match rng.gen_range(0..=1000) {
+            0..=400 => Rarity::Common,     // 40% chance
+            401..=600 => Rarity::Uncommon, // 20% chance
+            601..=750 => Rarity::Rare,     // 15% chance
+            751..=850 => Rarity::Ascended, // 10% chance
+            851..=925 => Rarity::Legendary,// 7.5% chance
+            926..=975 => Rarity::Mythic,   // 5% chance
+            976..=990 => Rarity::Cosmic,   // 1.5% chance
+            991..=997 => Rarity::Galactic, // 0.7% chance
+            _ => Rarity::Planetary,        // 0.3% chance
+        }
+    }
 }
 
 
@@ -45,6 +66,29 @@ pub enum CardStyle {
     Vintage,        // Vintage rarity represents cards that are considered classics or from earlier eras of baseball. These cards may have historical significance or be of interest to collectors due to their age and rarity.
     Relic,          // Relic rarity represents cards that contain embedded pieces of equipment, such as bat chips or jersey swatches. These cards are similar to GameUsed cards but focus on specific equipment components.
     Error,          // Error rarity represents cards with printing or production errors, making them unique and collectible due to their rarity and novelty.
+}
+impl CardStyle {
+    fn new() -> Self {
+        let mut rng = rand::thread_rng();
+        match rng.gen_range(0..=1000) {
+            0..=50 => CardStyle::Rookie,        // 5% chance
+            51..=150 => CardStyle::AllStar,     // 10% chance
+            151..=300 => CardStyle::HallOfFame, // 15% chance
+            301..=450 => CardStyle::Autograph,  // 15% chance
+            451..=600 => CardStyle::GameUsed,   // 15% chance
+            601..=750 => CardStyle::Parallel,   // 15% chance
+            751..=850 => CardStyle::Vintage,    // 10% chance
+            851..=950 => CardStyle::Relic,      // 10% chance
+            _ => CardStyle::Error,              // 5% chance
+        }
+    }
+}
+#[derive(Debug, Serialize, Deserialize,Clone)]
+pub struct Skills {
+    attack: Skill,
+    defense: Skill,
+    strength: Skill,
+    hitpoints: Skill,
 }
 
 impl Skills {
@@ -122,48 +166,21 @@ pub struct Card {
 }
 
 impl Card {
-    pub fn new(name: String, image: Vec<u8>) -> Self {
-        let mut rng = rand::thread_rng();
-        let random_element = match rng.gen_range(0..=3) {
-            0 => Element::Air,
-            1 => Element::Earth,
-            2 => Element::Fire,
-            _ => Element::Water
-        };
-
-        let random_rarity = match rng.gen_range(0..=1000) {
-            0..=400 => Rarity::Common,     // 40% chance
-            401..=600 => Rarity::Uncommon, // 20% chance
-            601..=750 => Rarity::Rare,     // 15% chance
-            751..=850 => Rarity::Ascended, // 10% chance
-            851..=925 => Rarity::Legendary,// 7.5% chance
-            926..=975 => Rarity::Mythic,   // 5% chance
-            976..=990 => Rarity::Cosmic,   // 1.5% chance
-            991..=997 => Rarity::Galactic, // 0.7% chance
-            _ => Rarity::Planetary,        // 0.3% chance
-        };
-
-        let random_card_style = match rng.gen_range(0..=1000) {
-            0..=50 => CardStyle::Rookie,        // 5% chance
-            51..=150 => CardStyle::AllStar,     // 10% chance
-            151..=300 => CardStyle::HallOfFame, // 15% chance
-            301..=450 => CardStyle::Autograph,  // 15% chance
-            451..=600 => CardStyle::GameUsed,   // 15% chance
-            601..=750 => CardStyle::Parallel,   // 15% chance
-            751..=850 => CardStyle::Vintage,    // 10% chance
-            851..=950 => CardStyle::Relic,      // 10% chance
-            _ => CardStyle::Error,              // 5% chance
-        };
-
+    pub fn new(mut name: String, image: Vec<u8>) -> Self {
+        if name.is_empty() {
+            let rng = RNG::try_from(&Language::Fantasy).unwrap();
+            let rng2 = RNG::try_from(&Language::Elven).unwrap();
+            name = format!("{} {}", rng.generate_name(), rng2.generate_name());
+        }
         Self {
             id: Uuid::new(),
             name,
-            element: random_element,
+            element: Element::new(),
             skills: Skills::new(),
             image,
-            rarity: random_rarity,
-            card_style: random_card_style,
-            wear: rng.gen(),
+            rarity: Rarity::new(),
+            card_style: CardStyle::new(),
+            wear: rand::random(),
             owner_id: None,
         }
     }

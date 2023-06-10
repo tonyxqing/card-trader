@@ -2,17 +2,17 @@
 	import { onMount } from "svelte";
        import Icon from "../lib/assets/favicon.png"
        import { tweened } from 'svelte/motion';
-       let options = {  duration: 100000, // Specify the easing function
-}
+       let options = { duration: 10000, } // Specify the easing function
        let deg = tweened(0, options);
        onMount(async () => {
             const max = 360;
             const min = 0;
             let frame: number;
             let increasing = false;
+            deg = tweened(0, options);
             async function animate() {
                 if ($deg > max - 1 && increasing) {
-                    deg = tweened(0, options);
+                    await deg.set(min); // Set value1 to its maximum value
                     increasing = false;
                 }
 
@@ -30,6 +30,7 @@
 
        let colors = ["#fff989", "#89d9ff"]
        $: degString = `${Math.floor($deg)}deg`;
+       $: console.log(degString);
 </script>
 
 

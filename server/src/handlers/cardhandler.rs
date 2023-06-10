@@ -24,6 +24,7 @@ pub struct CreateCard {
 #[post("/cards")]
 pub async fn create_card(data: web::Data<AppState>, request: web::Json<CreateCard>) -> impl Responder{
     let db = &data.r.try_lock().unwrap().db;
+    println!("string is empty {}", request.name.is_empty());
     let card = Card::new(request.name.clone(), request.image.clone());
     let result = add_card_to_db(db, &card).await;
     
@@ -56,6 +57,11 @@ pub struct CreatePlayerCard {
 #[post("/players/{player_id}/cards")]
 pub async fn create_card_for_player (data: web::Data<AppState>, id: web::Path<String>, request: web::Json<CreatePlayerCard>) -> Result<HttpResponse, Error> {
     let db = &data.r.try_lock().unwrap().db;
+    
+    let player = fetch_one_player_from_db(db, Uuid::parse_str(id.into_inner()).unwrap()).await;
+    
+    
+    if let Some(mut p) = player {
     let mut new_image = Vec::new();
     let image  =  if request.image.len() > 0 {
         image::load_from_memory(&request.image)
@@ -71,26 +77,22 @@ pub async fn create_card_for_player (data: web::Data<AppState>, id: web::Path<St
         
         image::load(cursor, image::ImageFormat::from_path(picture_url).map_err(|e|ErrorBadRequest("Failed loading the image from the path"))?)
     };
-    
-    let player = fetch_one_player_from_db(db, Uuid::parse_str(id.into_inner()).unwrap()).await;
-
-
     match image {
         Ok(picture) => {
             picture.resize_exact(IMG_WIDTH, IMG_HEIGHT, image::imageops::Nearest).write_to(&mut Cursor::new(&mut new_image), image::ImageOutputFormat::Png).map_err(|e| ErrorBadRequest("Could not load my picture"))?;
-            if let Some(mut p) = player {
                 let mut card = Card::new(request.name.clone(), new_image.clone());
                 card.assign_owner(Some(p.id));
                 add_card_to_db(db, &card).await;
                 p.cards.push(card.get_id());
                 update_player_to_db(db, p.id, p.name, p.cards).await;
                 Ok(HttpResponse::Ok().json(card))
-            } else {
-                Err(ErrorBadRequest("err"))
-            }
-
-        },
-        Err(_) => Err(ErrorBadRequest("err"))
+                
+            },
+            Err(_) => Err(ErrorBadRequest("err"))
+        }
+    } 
+    else {
+        Err(ErrorBadRequest("err"))
     }
 }
 

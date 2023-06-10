@@ -45,12 +45,9 @@ pub async fn remove_player_from_db(db: &Database, id: Uuid) -> bool {
     match result {
         Some(_) => {
             let card_filter = doc! {"owner_id": id};
-            let mut cursor = db.collection::<Card>("cards").find(card_filter, None).await.expect("could not find cards");
-            while let Some(mut c) = cursor.try_next().await.expect("could not trynext cursor") {
-                c.assign_owner(None);
-                update_card_in_db(db, c.id, c.name, c.image, c.element, c.skills, c.owner_id).await;
-            }
-            println!("deleted player and cards, releasing mutex");
+            let did_delete = db.collection::<Card>("cards").delete_many(card_filter, None).await.expect("could not find cards");
+
+            println!("deleted player and cards {:?}, releasing mutex", did_delete);
             true
         },
         None => false,
