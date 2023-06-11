@@ -2,24 +2,17 @@
 	import { onMount } from "svelte";
        import Icon from "../lib/assets/favicon.png"
        import { tweened } from 'svelte/motion';
-       let options = { duration: 10000, } // Specify the easing function
+	import { expoIn, quadIn, quadInOut } from "svelte/easing";
+       let options = { duration: 5000 } // Specify the easing function
        let deg = tweened(0, options);
        onMount(async () => {
             const max = 360;
             const min = 0;
             let frame: number;
             let increasing = false;
-            deg = tweened(0, options);
             async function animate() {
-                if ($deg > max - 1 && increasing) {
-                    await deg.set(min); // Set value1 to its maximum value
-                    increasing = false;
-                }
-
-                if ($deg < min + 1 && !increasing) {
-                    await deg.set(max); // Set value1 to its maximum value
-                    increasing = true;
-                }
+                deg = tweened(0, options);
+                await deg.set(max);
                 frame = requestAnimationFrame(animate);
 
             }
@@ -53,6 +46,7 @@ style="
         background: linear-gradient(to bottom, #4e54c8, #8f94fb);
         background-attachment: fixed;
         margin: 0;
+        font-family: 'Comic Sans MS';
     }
     nav {
         display: flex;
@@ -60,7 +54,7 @@ style="
         align-items: center;
         height: 84px;
 		border: 2px solid black;
-        background: linear-gradient(var(--deg), var(--gradient-1), var(--gradient-2));
+        background: center / cover no-repeat fixed linear-gradient(var(--deg), var(--gradient-1), var(--gradient-2));
     }
 
     nav a {

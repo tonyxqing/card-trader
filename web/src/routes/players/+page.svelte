@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { linear } from 'svelte/easing';
     import FaTrash from 'svelte-icons/fa/FaTrash.svelte';
     import FaEdit from 'svelte-icons/fa/FaEdit.svelte';
     import FaCheck from 'svelte-icons/fa/FaCheck.svelte';
@@ -35,6 +36,7 @@
         id: string, 
         date_created: string, 
         last_updated: string,
+        social_credit: number,
         cards: Card[] 
     }
 
@@ -167,148 +169,118 @@
     $: console.log(selected_cards);
 </script>
 
-<div class="table-container">
-    {#if players.length > 0}
-    <div class="player_row">    
-        <p>Name</p>
-        <p>ID</p>
-        <p>Date Created</p>
-        <p>Last Updated</p>
-        <p>delete</p>
-        <p>edit</p>    
-    </div>
-    {#each players as player, i}
+<div class="spacer"/>
+<div style="display: flex; align-items: center; gap: 1rem;">
+    <h3>Player List</h3>
+    <span>
+        <input type="text" bind:value={player_name}>
+    </span>
     <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div class="player_row" on:click={async () => {selected_player = await get_player(player.id); if (selected_player) {await fetch_player_cards(selected_player.id)}}}>    
-        {#if i === editing_player_index}
-        <span>
-            <input bind:value={player.name}>
+    <div style="display: flex; align-items: center; gap: 1rem; " class="icon_button"on:click={() => add_player(player_name)}>
+        <span class="icon_button" >
+            <FaUserPlus/> 
         </span>
-        <p>{player.id}</p>
-        <p>{player.date_created}</p>
-        <p>{player.last_updated}</p>
-        {:else}
-        <p>{player.name}</p>
-        <p>{player.id}</p>
-        <p>{player.date_created}</p>
-        <p>{player.last_updated}</p>
-        {/if}    
-        <span class="icon_button" on:click={async (e) => {if (player.id === selected_player?.id) {await delete_player(player.id); selected_cards = []; selected_player = null} else {await delete_player(player.id)} e.stopPropagation();}}>
-                <FaTrash/>
-        </span>
-        {#if i === editing_player_index}
-        <div>
-            <span class="editing_buttons">
-                <span class="icon_button" on:click={(e) => {edit_player(player.id, player); editing_player_index = null; e.stopPropagation();}}>
-                    <FaCheck/>
-                </span>
-                <span class="icon_button" on:click={(e) => {editing_player_index = null; e.stopPropagation();}}>
-                    <FaTimes/>
-                </span>
-            </span>
-        </div>
-        {:else}
-        <span class="icon_button" on:click={(e) => {editing_player_index = i; e.stopPropagation();}}>
-            <FaEdit/>
-        </span>
-        {/if}
-        </div>
-    {/each}
-    {/if}
-    <div class="player_row">
-        <span>
-            <input type="text" bind:value={player_name}>
-        </span>
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-        <span class="icon_button stack" on:click={() => add_player(player_name)}>
-            <FaUserPlus/> Add Player
-        </span>
+        <p>add player </p>
     </div>
+</div>
+<div class="player_container">
+    {#if players.length > 0}
+        {#each players as player, i}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div class="player_card" on:click={async () => {selected_player = await get_player(player.id); if (selected_player) {await fetch_player_cards(selected_player.id)}}}>    
+                {#if i === editing_player_index}
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem">
+                            <h3>
+                                <input bind:value={player.name}>
+                            </h3>        
+                        </div>
+                        <div>
+                            <span class="editing_buttons">
+                                <span class="icon_button" on:click={(e) => {edit_player(player.id, player); editing_player_index = null; e.stopPropagation();}}>
+                                    <FaCheck/>
+                                </span>
+                                <span class="icon_button" on:click={(e) => {editing_player_index = null; e.stopPropagation();}}>
+                                    <FaTimes/>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                {:else}
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem">
+                        <h3>{player.name}</h3>
+                        <div style="display: flex; gap: 1rem;">
+                            <span class="icon_button" on:click={async (e) => {if (player.id === selected_player?.id) {await delete_player(player.id); selected_cards = []; selected_player = null} else {await delete_player(player.id)} e.stopPropagation();}}>
+                                <FaTrash/>
+                            </span>
+                            <span class="icon_button" on:click={(e) => {editing_player_index = i; e.stopPropagation();}}>
+                                <FaEdit/>
+                            </span>      
+                        </div>  
+                    </div>
+                {/if} 
+                <div class="card_label">
+                    <p>{player.id}</p>
+                </div>
+            </div>
+        {/each}
+    {/if}
 </div>
 <div class="spacer"/>
-<div class="selected_player_table">
 {#if selected_player}
-<div class="selected_player_row">
-    <p>Player Name</p>
-    <p>Player ID</p>
-</div>
-    <div class="selected_player_row">
-        <p>{selected_player.name}</p>
-        <p>{selected_player.id}</p>
-    </div>
-    {#if selected_cards}
-    <div class="selected_player_row">
-        <p>Card Name</p>
-        <p>Card ID</p>
-        <p>Element</p>
-        <p>Skills</p>
-        <p>Rarity</p>
-        <p>Card Style</p>
-        <p>Wear</p>
-        <p>Image</p>
-        <p>delete</p>
-        <p>edit</p> 
-    </div>
-    {#each selected_cards as card, i}
-        <div class="selected_player_row">
-            {#if i === editing_card_index}
-                <span>
-                    <input bind:value={selected_cards[i].name}>
-                </span>
-                <p>{card.id}</p>
-                <p><select bind:value={selected_cards[i].element}>
-                    <option>Air</option>
-                    <option>Water</option>
-                    <option>Earth</option>
-                    <option>Fire</option>
-                </select></p>
-                <span class="row">
-                    <div class="stack">
-                    Level
-                            <p>hitpoints: <input type="number" bind:value={selected_cards[i].skills.hitpoints.level}></p>
-                            <p>attack: <input type="number" bind:value={selected_cards[i].skills.attack.level}></p>
-                            <p>strength: <input type="number" bind:value={selected_cards[i].skills.strength.level}></p>
-                            <p>defense: <input type="number" bind:value={selected_cards[i].skills.defense.level}></p>
-                        
-                    </div>
-                    <div class="stack">
-                    Expereience
-                            <p>hitpoints: <input type="number" bind:value={selected_cards[i].skills.hitpoints.experience}></p>
-                            <p>attack: <input type="number" bind:value={selected_cards[i].skills.attack.experience}></p>
-                            <p>strength: <input type="number" bind:value={selected_cards[i].skills.strength.experience}></p>
-                            <p>defense: <input type="number" bind:value={selected_cards[i].skills.defense.experience}></p>
-                    </div>
+<div style="display: flex; align-items: center; gap: 1rem;">    
+    <h3>Selcted Player</h3>
+    <p>{selected_player.name}</p>
+    <p>{selected_player.id}</p>
+    <div class="spacer"/>   
+    <span>
+        <input type="text" bind:value={card_name}>
+    </span>
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div style="display: flex; align-items: center; gap: 1rem; " class="icon_button" on:click={async () => {  if (selected_player) { await add_card(selected_player.id, card_name,  files_image ?? []);  }}}>
+        <span class="icon_button stack">
+            <FaRegWindowRestore/>
+        </span>
+        <p>Add card</p>
+    <span>
+    <label for="card_picture">Add card picture <img src={getImageUrl(files_image)} alt=""/></label>
+    <input style="display: none" id="card_picture" type="file" accept=".jpg, .jpeg, .png" bind:files={files} on:change={(event) => {
+        const file = event?.currentTarget?.files; // Get the selected file
+        const reader = new FileReader(); // Create a FileReader object
 
-                </span>
-                <p>{selected_cards[i].rarity}</p>
-                <p>{card.card_style}</p>
-                <p>{card.wear}</p>
-            {:else}
-                <p>{card.name}</p>
-                <p>{card.id}</p>
-                <p>{card.element}</p>
-                <span class="row">
-                    <div class="stack">
-                        Level
-                                <p>hitpoints: {card.skills.hitpoints.level}</p>
-                                <p>attack: {card.skills.attack.level}</p>
-                                <p>strength: {card.skills.strength.level}</p>
-                                <p>defense: {card.skills.defense.level}</p>
-                    </div>
-                    <div class="stack">
-                        Expereience
-                            <p>hitpoints: {card.skills.hitpoints.experience}</p>
-                            <p>attack: {card.skills.attack.experience}</p>
-                            <p>strength: {card.skills.strength.experience}</p>
-                            <p>defense: {card.skills.defense.experience}</p>
-                    </div>
-                </span>
-                <p>{card.rarity}</p>
-                <p>{card.card_style}</p>
-                <p>{card.wear}</p>
-            {/if}
-            <label for={`selected_card_picture-${i}`}><img src={selected_files[i] ? URL.createObjectURL(selected_files[i][0]) :  getImageUrl(card.image)} alt=""></label>
-            <input on:change={(event) => {
+        // Set up the onload event handler
+        reader.onload = function (event) {
+            const arrayBuffer = event?.target?.result; // Get the ArrayBuffer
+
+            // Create a Uint8Array from the ArrayBuffer
+            if (arrayBuffer && typeof(arrayBuffer) !== 'string') {
+                const uint8Array = new Uint8Array(arrayBuffer);
+    
+                // Use the Uint8Array for further processing
+                // (e.g., send it to a server, process it with JavaScript, etc.)
+                files_image = Array.from(uint8Array);
+            }
+        };
+
+        // Read the selected file as an ArrayBuffer
+        if (file) {
+            reader.readAsArrayBuffer(file[0]);
+        }}}>
+    </span>
+    </div>
+</div>
+<div class="selected_player_table">
+    {#if selected_cards}
+    {#each selected_cards as card, i}
+        <div class="selected_player_card">
+            {#if i === editing_card_index}
+                <h3>
+                    <input bind:value={selected_cards[i].name}>
+                </h3>
+                <label for={`selected_card_picture-${i}`}>
+                    <img src={selected_files[i] ? URL.createObjectURL(selected_files[i][0]) :  getImageUrl(card.image)} alt="">
+                </label>
+                <input on:change={(event) => {
                 const file = event?.currentTarget?.files; // Get the selected file
                 const reader = new FileReader(); // Create a FileReader object
         
@@ -328,14 +300,77 @@
                     reader.readAsArrayBuffer(file[0]);
                 }
                 }} style="display: none" id={`selected_card_picture-${i}`} type="file" accept=".jpg, .jpeg, .png" bind:files={selected_files[i]}>
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <span class="icon_button" on:click={async () => {editing_card_index = null; selected_files[i] = null; selected_cards.splice(i, 1); selected_files.splice(i, 1); await delete_card(card.id);}}>
-                    <FaTrash/>
-            </span>
+                <span class="row">
+                    <div class="stack">
+                        Level
+                        <p>hitpoints: <input type="number" bind:value={selected_cards[i].skills.hitpoints.level}></p>
+                        <p>attack: <input type="number" bind:value={selected_cards[i].skills.attack.level}></p>
+                        <p>strength: <input type="number" bind:value={selected_cards[i].skills.strength.level}></p>
+                        <p>defense: <input type="number" bind:value={selected_cards[i].skills.defense.level}></p>
+                        
+                    </div>
+                    <div class="stack">
+                        Expereience
+                        <p>hitpoints: <input type="number" bind:value={selected_cards[i].skills.hitpoints.experience}></p>
+                        <p>attack: <input type="number" bind:value={selected_cards[i].skills.attack.experience}></p>
+                        <p>strength: <input type="number" bind:value={selected_cards[i].skills.strength.experience}></p>
+                        <p>defense: <input type="number" bind:value={selected_cards[i].skills.defense.experience}></p>
+                    </div>
+                </span>
+                <p>
+                    <select bind:value={selected_cards[i].element}>
+                        <option>Air</option>
+                        <option>Water</option>
+                        <option>Earth</option>
+                        <option>Fire</option>
+                    </select>
+                </p>
+                <p>{selected_cards[i].rarity}</p>
+                <p>{card.card_style}</p>
+            {:else}
+            <div class="row">
+                <h3>{card.name}</h3>
+                <div style="display: flex; gap: 1rem;">
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <span class="icon_button" on:click={async () => {editing_card_index = null; selected_files[i] = null; selected_cards.splice(i, 1); selected_files.splice(i, 1); await delete_card(card.id);}}>
+                        <FaTrash/>
+                    </span>
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <span class="icon_button"  on:click={async () => { 
+                            editing_card_index = i; await edit_card(card.id, card); selected_cards[i] = await fetch_one_card(card.id); if (selected_files[i]){ selected_files[i] = null;}}}>
+                            <FaEdit/>
+                        </span>
+          
+                    </div>
+            </div>
+                <img src={getImageUrl(card.image)} alt="">
+                <!-- <span class="row">
+                    <div class="stack">
+                        Level
+                                <p>hitpoints: {card.skills.hitpoints.level}</p>
+                                <p>attack: {card.skills.attack.level}</p>
+                                <p>strength: {card.skills.strength.level}</p>
+                                <p>defense: {card.skills.defense.level}</p>
+                    </div>
+                    <div class="stack">
+                        Expereience
+                            <p>hitpoints: {card.skills.hitpoints.experience}</p>
+                            <p>attack: {card.skills.attack.experience}</p>
+                            <p>strength: {card.skills.strength.experience}</p>
+                            <p>defense: {card.skills.defense.experience}</p>
+                    </div>
+                </span> -->
+                <div class="row">
+                    <p>{card.element}</p>
+                    <p>{card.rarity}</p>
+                    <p>{card.card_style}</p>
+                </div>
+            {/if}
+            
+        <div class="row">
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         {#if i === editing_card_index}
-            <div>
-                <span class="editing_buttons">
+                <span class="editing_buttons row">
                     <span class="icon_button" on:click={async () => {editing_card_index = null; selected_files[i] = null; selected_cards.splice(i, 1); selected_files.splice(i, 1); await delete_card(card.id);}}>
                         <FaCheck/>
                     </span>
@@ -343,63 +378,36 @@
                         <FaTimes/>
                     </span>
                 </span>
-            </div>
-        {:else}
-            <span class="icon_button"  on:click={async () => { 
-                editing_card_index = i; await edit_card(card.id, card); selected_cards[i] = await fetch_one_card(card.id); if (selected_files[i]){ selected_files[i] = null;}}}>
-                <FaEdit/>
-            </span>
         {/if}
         </div>
-    {/each}
-        <div class="selected_player_row">
-            <span>
-                <input type="text" bind:value={card_name}>
-            </span>
-        <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <span class="icon_button stack"on:click={async () => {  if (selected_player) { await add_card(selected_player.id, card_name,  files_image ?? []);  }}}>
-                <FaRegWindowRestore/>Add card
-            </span>
-
-            <span>
-                <label for="card_picture">Add card picture <img src={getImageUrl(files_image)} alt=""/></label>
-                <input style="display: none" id="card_picture" type="file" accept=".jpg, .jpeg, .png" bind:files={files} on:change={(event) => {
-                    const file = event?.currentTarget?.files; // Get the selected file
-                    const reader = new FileReader(); // Create a FileReader object
-            
-                    // Set up the onload event handler
-                    reader.onload = function (event) {
-                        const arrayBuffer = event?.target?.result; // Get the ArrayBuffer
-            
-                        // Create a Uint8Array from the ArrayBuffer
-                        if (arrayBuffer && typeof(arrayBuffer) !== 'string') {
-                            const uint8Array = new Uint8Array(arrayBuffer);
-                
-                            // Use the Uint8Array for further processing
-                            // (e.g., send it to a server, process it with JavaScript, etc.)
-                            files_image = Array.from(uint8Array);
-                        }
-                    };
-            
-                    // Read the selected file as an ArrayBuffer
-                    if (file) {
-                        reader.readAsArrayBuffer(file[0]);
-                    }}}>
-            </span>
+        <div class="row">
+            <div class="card_label">
+                <p>{card.id}</p>
+            </div>
+            <div class="card_label">
+                <p>{card.wear}</p>
+            </div>
         </div>
+        </div>
+    {/each}
     {/if}
-{/if}
 </div>
+{/if}
 
 <style>
+h3 {
+    padding-left: 1rem;
+}
 .spacer {
     height: 50px;
 }
 
 .row {
     display: flex !important;
-    gap: 2rem;
-
+    align-items: center;
+    padding: 0 1rem;
+    width: -webkit-fill-available;
+    justify-content: space-between;
 }
 .stack {
     display: flex;
@@ -414,58 +422,83 @@
     display: flex;
     text-align: justify;
 }
-img {
-    max-width: 100px;
+
+.player_container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 1rem;
 }
-.table-container {
-    
-    display: table;
-    width: 100%;
-    }
-    .player_row {
-        display: table-row;
-    }
 
-    .player_row > * { 
-    vertical-align: middle;
-    display: table-cell;
-    padding: 5px;
+.player_card:not(:first-child):not(:last-child) > * {
+
+}
+.player_card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     border: 1px solid black;
-    }
+    border-radius: 1rem;
+    flex: 1 1 30%;
+    background: center / contain fixed no-repeat linear-gradient(whitesmoke,  #8f94fb)
+}
+.card_label {
+    line-height: 0;
+}
 
-    .selected_player_table {
-        display: table;
-        width: 100%;
+.card_label b {
+    font-size: 12px;
+}
+.card_label p {
+    color: rgb(132, 132, 132);
+    font-size: 12px;
+    padding-left: 1rem;
+    text-wrap: nowrap;
 
-    }
-    .selected_player_row {
-        display: table-row;
-    }
-    .selected_player_row  > * {
-        vertical-align: middle;
-        display:table-cell;
-        padding: 10px;
-        border: 1px solid black;
-    }
-    .selected_player_row .stack input {
-        width: 2rem;
-    }
+}
+.player_card > * { 
+    vertical-align: middle;
+    padding: 5px;
+/* border: 1px solid black; */
+}
+
+.selected_player_table {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+
+}
+.selected_player_card {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    border: 1px solid black;
+    border-radius: 1rem;
+    background: center / contain fixed no-repeat linear-gradient(whitesmoke,  #8f94fb);
+    flex: 0 1 30%;
+}
+
+
+.selected_player_card .stack input {
+    width: 2rem;
+}
 
 
 
-    .icon_button {
-        aspect-ratio: 1/1;
-        height: 20px;
-        max-width: 20px;
-    }
+.icon_button {
+aspect-ratio: 1/1;
+    height: 20px;
+    max-width: 20px;
+}
 
-    .icon_button:hover {
-        color: whitesmoke;
-    }
+.icon_button:hover {
+    color: whitesmoke;
+}
 
-    .editing_buttons {
-        height: 20px;
-        display: flex;
-        justify-content: space-around;
-    }
+.editing_buttons {
+    height: 20px;
+    display: flex;
+    justify-content: space-around;
+}
 </style> 
