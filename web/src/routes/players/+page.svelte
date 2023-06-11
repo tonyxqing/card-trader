@@ -37,7 +37,6 @@
         date_created: string, 
         last_updated: string,
         social_credit: number,
-        cards: Card[] 
     }
 
     async function get_players() {
@@ -207,7 +206,7 @@
                         </div>
                     </div>
                 {:else}
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0 1rem;">
                         <h3>{player.name}</h3>
                         <div style="display: flex; gap: 1rem;">
                             <span class="icon_button" on:click={async (e) => {if (player.id === selected_player?.id) {await delete_player(player.id); selected_cards = []; selected_player = null} else {await delete_player(player.id)} e.stopPropagation();}}>
@@ -282,6 +281,7 @@
                 <h3>
                     <input bind:value={selected_cards[i].name}>
                 </h3>
+                <div class="row">
                 <label for={`selected_card_picture-${i}`}>
                     <img src={selected_files[i] ? URL.createObjectURL(selected_files[i][0]) :  getImageUrl(card.image)} alt="">
                 </label>
@@ -322,6 +322,9 @@
                         <p>defense: <input type="number" bind:value={selected_cards[i].skills.defense.experience}></p>
                     </div>
                 </span>
+            </div>
+            <div class="row">
+
                 <p>
                     <select bind:value={selected_cards[i].element}>
                         <option>Air</option>
@@ -332,6 +335,7 @@
                 </p>
                 <p>{selected_cards[i].rarity}</p>
                 <p>{card.card_style}</p>
+            </div>
             {:else}
             <div class="row">
                 <h3>{card.name}</h3>
@@ -342,14 +346,15 @@
                     </span>
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <span class="icon_button"  on:click={async () => { 
-                            editing_card_index = i; await edit_card(card.id, card); selected_cards[i] = await fetch_one_card(card.id); if (selected_files[i]){ selected_files[i] = null;}}}>
+                            editing_card_index = i; }}>
                             <FaEdit/>
                         </span>
           
                     </div>
             </div>
+            <div class="row">
                 <img src={getImageUrl(card.image)} alt="">
-                <!-- <span class="row">
+                <span class="row">
                     <div class="stack">
                         Level
                                 <p>hitpoints: {card.skills.hitpoints.level}</p>
@@ -364,7 +369,8 @@
                             <p>strength: {card.skills.strength.experience}</p>
                             <p>defense: {card.skills.defense.experience}</p>
                     </div>
-                </span> -->
+                </span>
+            </div>
                 <div class="row">
                     <p>{card.element}</p>
                     <p>{card.rarity}</p>
@@ -376,7 +382,7 @@
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         {#if i === editing_card_index}
                 <span class="editing_buttons row">
-                    <span class="icon_button" on:click={async () => {editing_card_index = null; selected_files[i] = null; selected_cards.splice(i, 1); selected_files.splice(i, 1); await delete_card(card.id);}}>
+                    <span class="icon_button" on:click={async () => {editing_card_index = null; selected_files[i] = null; await edit_card(card.id, card); selected_cards[i] = await fetch_one_card(card.id);}}>
                         <FaCheck/>
                     </span>
                     <span class="icon_button" on:click={(e) => {editing_card_index = null; e.stopPropagation();}}>
@@ -478,6 +484,7 @@ h3 {
     display: flex;
     align-items: center;
     flex-direction: column;
+    justify-content: space-between;
     border: 1px solid black;
     border-radius: 1rem;
     background: center / contain fixed no-repeat linear-gradient(whitesmoke,  #8f94fb);

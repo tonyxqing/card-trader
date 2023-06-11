@@ -1,7 +1,6 @@
 use serde::{Serialize, Deserialize};
 use chrono::prelude::*;
 use mongodb::bson::uuid::Uuid;
-use crate::model::card::*;
 use rnglib::{RNG, Language};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -10,9 +9,7 @@ pub struct Player {
     pub social_credit: u32,
     pub name: String,
     pub date_created: DateTime<Utc>,
-    pub last_updated: DateTime<Utc>,
-    pub cards: Vec<Uuid>,
-    
+    pub last_updated: DateTime<Utc>,    
 }
 
 impl Player {
@@ -28,7 +25,6 @@ impl Player {
             social_credit: 0,
             date_created: Utc::now(),
             last_updated: Utc::now(),
-            cards: Vec::new()
         }
     }
 }

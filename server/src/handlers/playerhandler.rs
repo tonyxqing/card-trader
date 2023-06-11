@@ -58,7 +58,6 @@ pub async fn create_player(
 #[derive(Deserialize)]
 pub struct UpdatePlayer {
     pub name: String,
-    pub cards: Vec<Uuid>,
 }
 #[put("/players/{player_id}")]
 pub async fn edit_player(
@@ -71,7 +70,6 @@ pub async fn edit_player(
         &data.r.try_lock().unwrap().db,
         Uuid::parse_str(id.into_inner()).unwrap(),
         response.name.clone(),
-        response.cards.clone(),
     )
     .await;
     HttpResponse::Ok().body("Player Edited")

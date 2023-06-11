@@ -26,30 +26,30 @@ impl Element {
 
 #[derive(Debug, Serialize, Deserialize,Clone)]
 pub enum Rarity {
-    Common, 
-    Uncommon,
+    Famed, 
+    Illustrious,
     Rare,
     Ascended,
     Legendary,
     Mythic,
-    Cosmic,
-    Galactic,
-    Planetary,
+    Celestial,
+    Supreme,
+    Immortal,
 }
 
 impl Rarity {
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         match rng.gen_range(0..=1000) {
-            0..=400 => Rarity::Common,     // 40% chance
-            401..=600 => Rarity::Uncommon, // 20% chance
-            601..=750 => Rarity::Rare,     // 15% chance
-            751..=850 => Rarity::Ascended, // 10% chance
-            851..=925 => Rarity::Legendary,// 7.5% chance
-            926..=975 => Rarity::Mythic,   // 5% chance
-            976..=990 => Rarity::Cosmic,   // 1.5% chance
-            991..=997 => Rarity::Galactic, // 0.7% chance
-            _ => Rarity::Planetary,        // 0.3% chance
+              0..=400 => Rarity::Famed,           // 40% chance
+            401..=600 => Rarity::Illustrious,     // 20% chance
+            601..=750 => Rarity::Rare,            // 15% chance
+            751..=850 => Rarity::Ascended,        // 10% chance
+            851..=925 => Rarity::Legendary,       // 7.5% chance
+            926..=975 => Rarity::Mythic,          // 5% chance
+            976..=990 => Rarity::Celestial,       // 1.5% chance
+            991..=997 => Rarity::Supreme,         // 0.7% chance
+                    _ => Rarity::Immortal,        // 0.3% chance
         }
     }
 }
@@ -71,15 +71,15 @@ impl CardStyle {
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         match rng.gen_range(0..=1000) {
-            0..=50 => CardStyle::Rookie,        // 5% chance
-            51..=150 => CardStyle::AllStar,     // 10% chance
+              0..= 50 => CardStyle::Rookie,     // 5% chance
+             51..=150 => CardStyle::AllStar,    // 10% chance
             151..=300 => CardStyle::HallOfFame, // 15% chance
             301..=450 => CardStyle::Autograph,  // 15% chance
             451..=600 => CardStyle::GameUsed,   // 15% chance
             601..=750 => CardStyle::Parallel,   // 15% chance
             751..=850 => CardStyle::Vintage,    // 10% chance
             851..=950 => CardStyle::Relic,      // 10% chance
-            _ => CardStyle::Error,              // 5% chance
+                    _ => CardStyle::Error,      // 5% chance
         }
     }
 }

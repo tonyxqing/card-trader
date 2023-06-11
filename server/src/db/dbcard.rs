@@ -36,7 +36,6 @@ pub async fn fetch_one_card_from_db(db: &Database, id: Uuid) -> Result<Option<Ca
     let filter = doc! { "id": id }; 
     let result = collection.find_one(filter, None).await?;
     Ok(result)
-
 }
 
 pub async fn add_card_to_db(db: &Database, c: &Card) -> bool {
@@ -50,28 +49,11 @@ pub async fn add_card_to_db(db: &Database, c: &Card) -> bool {
 
 pub async fn remove_card_from_db (db: &Database, id: Uuid) -> bool {
     let collection = db.collection::<Card>("cards");
-    
     let filter = doc! {"id": id};
     let result = collection.find_one_and_delete(filter, None).await;
     println!("deleted card");
     match result {
-        Ok(card) => {
-            if let Some(c) = card {
-             if let Some(id) = c.owner_id {
-                 let player = fetch_one_player_from_db(db, id).await;
-                    if let Some(mut p) = player {
-                        p.cards.retain(|x| *x !=  c.id);
-                        return update_player_to_db(db, p.id, p.name, p.cards).await
-                    } else {
-                        return false
-                    }
-             } else {
-                false
-             }
-            } else {
-                return false
-            }
-        },
+        Ok(_) => true,
         Err(_) => false,
     }
 }

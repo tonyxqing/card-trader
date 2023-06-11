@@ -83,10 +83,7 @@ pub async fn create_card_for_player (data: web::Data<AppState>, id: web::Path<St
                 let mut card = Card::new(request.name.clone(), new_image.clone());
                 card.assign_owner(Some(p.id));
                 add_card_to_db(db, &card).await;
-                p.cards.push(card.get_id());
-                update_player_to_db(db, p.id, p.name, p.cards).await;
                 Ok(HttpResponse::Ok().json(card))
-                
             },
             Err(_) => Err(ErrorBadRequest("err"))
         }
@@ -116,11 +113,11 @@ pub async fn update_card(data: web::Data<AppState>, id: web::Path<String>, reque
     let db = &data.r.try_lock().unwrap().db;
     update_card_in_db(db, Uuid::parse_str(id.into_inner()).unwrap(), request.name.clone(), request.image.clone(), request.element.clone(), request.skills.clone(), request.owner_id.clone()).await;
 
-    HttpResponse::Ok()
+    HttpResponse::Ok().body("Updated Card")
 }
 #[delete("/cards/{card_id}")]
 pub async fn delete_card(data: web::Data<AppState>, id: web::Path<String>) -> impl Responder{
     let db = &data.r.try_lock().unwrap().db;
     remove_card_from_db(db, Uuid::parse_str(id.into_inner()).unwrap()).await;
-    HttpResponse::Ok()
+    HttpResponse::Ok().body("Deleted Card")
 }
