@@ -53,11 +53,14 @@ style="
         background-color: #a6bdfc;
         align-items: center;
         height: 84px;
+        width: 100%;
+        min-width: fit-content;
 		border: 2px solid black;
         background: center / cover no-repeat fixed linear-gradient(var(--deg), var(--gradient-1), var(--gradient-2));
     }
 
     nav a {
+        flex: 1 1 100%;
         padding: 2rem 5rem;
         text-decoration: none;
         font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;

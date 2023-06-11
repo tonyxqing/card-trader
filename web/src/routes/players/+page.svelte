@@ -228,47 +228,52 @@
 </div>
 <div class="spacer"/>
 {#if selected_player}
-<div style="display: flex; align-items: center; gap: 1rem;">    
-    <h3>Selcted Player</h3>
+<div style="display: flex; flex-wrap: wrap;justify-content:center;align-items: center; gap: 1rem;">    
+    <h3>Selected Player Cards</h3>
     <p>{selected_player.name}</p>
     <p>{selected_player.id}</p>
-    <div class="spacer"/>   
-    <span>
-        <input type="text" bind:value={card_name}>
-    </span>
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <div style="display: flex; align-items: center; gap: 1rem; " class="icon_button" on:click={async () => {  if (selected_player) { await add_card(selected_player.id, card_name,  files_image ?? []);  }}}>
-        <span class="icon_button stack">
+    <div class="spacer"/>  
+    <div style="display: flex; align-items: center; gap: 1rem; ">
+        <span>
+            <input type="text" bind:value={card_name}>
+        </span>
+
+        <span>
+            <label for="card_picture">Add card picture <img src={getImageUrl(files_image)} alt=""/></label>
+            <input style="display: none" id="card_picture" type="file" accept=".jpg, .jpeg, .png" bind:files={files} on:change={(event) => {
+                const file = event?.currentTarget?.files; // Get the selected file
+                const reader = new FileReader(); // Create a FileReader object
+    
+                // Set up the onload event handler
+                reader.onload = function (event) {
+                    const arrayBuffer = event?.target?.result; // Get the ArrayBuffer
+    
+                    // Create a Uint8Array from the ArrayBuffer
+                    if (arrayBuffer && typeof(arrayBuffer) !== 'string') {
+                        const uint8Array = new Uint8Array(arrayBuffer);
+            
+                        // Use the Uint8Array for further processing
+                        // (e.g., send it to a server, process it with JavaScript, etc.)
+                        files_image = Array.from(uint8Array);
+                    }
+                };
+    
+                // Read the selected file as an ArrayBuffer
+                if (file) {
+                    reader.readAsArrayBuffer(file[0]);
+                }}}>
+            </span>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <div style="display: flex; align-items: center; gap: 1rem;" class="icon_button row" on:click={async () => {  if (selected_player) { await add_card(selected_player.id, card_name,  files_image ?? []);  }}}>
+        <span class="icon_button">
             <FaRegWindowRestore/>
         </span>
         <p>Add card</p>
-    <span>
-    <label for="card_picture">Add card picture <img src={getImageUrl(files_image)} alt=""/></label>
-    <input style="display: none" id="card_picture" type="file" accept=".jpg, .jpeg, .png" bind:files={files} on:change={(event) => {
-        const file = event?.currentTarget?.files; // Get the selected file
-        const reader = new FileReader(); // Create a FileReader object
-
-        // Set up the onload event handler
-        reader.onload = function (event) {
-            const arrayBuffer = event?.target?.result; // Get the ArrayBuffer
-
-            // Create a Uint8Array from the ArrayBuffer
-            if (arrayBuffer && typeof(arrayBuffer) !== 'string') {
-                const uint8Array = new Uint8Array(arrayBuffer);
-    
-                // Use the Uint8Array for further processing
-                // (e.g., send it to a server, process it with JavaScript, etc.)
-                files_image = Array.from(uint8Array);
-            }
-        };
-
-        // Read the selected file as an ArrayBuffer
-        if (file) {
-            reader.readAsArrayBuffer(file[0]);
-        }}}>
-    </span>
     </div>
+</div> 
 </div>
+<div class="spacer"/>  
+
 <div class="selected_player_table">
     {#if selected_cards}
     {#each selected_cards as card, i}
@@ -439,7 +444,7 @@ h3 {
     justify-content: space-between;
     border: 1px solid black;
     border-radius: 1rem;
-    flex: 1 1 30%;
+    flex: 0 1 30%;
     background: center / contain fixed no-repeat linear-gradient(whitesmoke,  #8f94fb)
 }
 .card_label {
