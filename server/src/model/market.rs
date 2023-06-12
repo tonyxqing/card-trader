@@ -13,4 +13,4 @@ struct Trade {
     sender_offer: Vec<Uuid>,
     status: TradeStatus,
     date_finalized: DateTime<Utc>
-}
+};

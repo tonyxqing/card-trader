@@ -47,7 +47,7 @@ pub async fn add_card_to_db(db: &Database, c: &Card) -> bool {
     }
 }
 
-pub async fn remove_card_from_db (db: &Database, id: Uuid) -> bool {
+pub async fn remove_card_from_db(db: &Database, id: Uuid) -> bool {
     let collection = db.collection::<Card>("cards");
     let filter = doc! {"id": id};
     let result = collection.find_one_and_delete(filter, None).await;

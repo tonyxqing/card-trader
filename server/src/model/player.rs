@@ -1,15 +1,16 @@
-use serde::{Serialize, Deserialize};
 use chrono::prelude::*;
 use mongodb::bson::uuid::Uuid;
-use rnglib::{RNG, Language};
+use rnglib::{Language, RNG};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Player {
     pub id: Uuid,
     pub social_credit: u32,
+    pub dink_coin: u32,
     pub name: String,
     pub date_created: DateTime<Utc>,
-    pub last_updated: DateTime<Utc>,    
+    pub last_updated: DateTime<Utc>,
 }
 
 impl Player {
@@ -23,6 +24,7 @@ impl Player {
             id: Uuid::new(),
             name,
             social_credit: 0,
+            dink_coin: 0,
             date_created: Utc::now(),
             last_updated: Utc::now(),
         }

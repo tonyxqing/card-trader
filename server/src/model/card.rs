@@ -1,9 +1,9 @@
+use image::Rgb;
+use imageproc::definitions::Image;
 use mongodb::bson::uuid::Uuid;
-use serde::{Serialize, Deserialize};
 use rand::prelude::*;
-use image::{Rgb};
-use imageproc::{definitions::{Image}};
-use rnglib::{RNG, Language};
+use rnglib::{Language, RNG};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Element {
@@ -19,14 +19,14 @@ impl Element {
             0 => Element::Air,
             1 => Element::Earth,
             2 => Element::Fire,
-            _ => Element::Water
+            _ => Element::Water,
         }
     }
 }
 
-#[derive(Debug, Serialize, Deserialize,Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum Rarity {
-    Famed, 
+    Famed,
     Illustrious,
     Rare,
     Ascended,
@@ -41,49 +41,48 @@ impl Rarity {
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         match rng.gen_range(0..=1000) {
-              0..=400 => Rarity::Famed,           // 40% chance
-            401..=600 => Rarity::Illustrious,     // 20% chance
-            601..=750 => Rarity::Rare,            // 15% chance
-            751..=850 => Rarity::Ascended,        // 10% chance
-            851..=925 => Rarity::Legendary,       // 7.5% chance
-            926..=975 => Rarity::Mythic,          // 5% chance
-            976..=990 => Rarity::Celestial,       // 1.5% chance
-            991..=997 => Rarity::Supreme,         // 0.7% chance
-                    _ => Rarity::Immortal,        // 0.3% chance
+              0..=400 => Rarity::Famed,         // 40% chance
+            401..=600 => Rarity::Illustrious, // 20% chance
+            601..=750 => Rarity::Rare,        // 15% chance
+            751..=850 => Rarity::Ascended,    // 10% chance
+            851..=925 => Rarity::Legendary,   // 7.5% chance
+            926..=975 => Rarity::Mythic,      // 5% chance
+            976..=990 => Rarity::Celestial,   // 1.5% chance
+            991..=997 => Rarity::Supreme,     // 0.7% chance
+                    _ => Rarity::Immortal,            // 0.3% chance
         }
     }
 }
 
-
-#[derive(Debug, Serialize, Deserialize,Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum CardStyle {
-    Rookie,         // Rookie rarity represents cards of up-and-coming players who are making their professional debut or early in their careers. These cards may hold special significance for collectors.
-    AllStar,        // All-Star rarity represents cards of players who have been selected to participate in the All-Star Game, showcasing their exceptional skills and popularity.
-    HallOfFame,     // HallOfFame rarity represents cards of players who have been inducted into the Baseball Hall of Fame, symbolizing their legendary status in the sport.
-    Autograph,      // Autograph rarity represents cards that feature the authentic signature of the player. These cards are highly valued by collectors due to their personal connection with the player.
-    GameUsed,       // GameUsed rarity represents cards that contain actual pieces of game-worn equipment or memorabilia, such as jerseys, bats, or baseballs. These cards are considered unique and highly sought-after.
-    Parallel,       // Parallel rarity represents cards with special variants or editions, featuring different designs, colors, or finishes. These cards offer collectors additional options and variations to collect.
-    Vintage,        // Vintage rarity represents cards that are considered classics or from earlier eras of baseball. These cards may have historical significance or be of interest to collectors due to their age and rarity.
-    Relic,          // Relic rarity represents cards that contain embedded pieces of equipment, such as bat chips or jersey swatches. These cards are similar to GameUsed cards but focus on specific equipment components.
-    Error,          // Error rarity represents cards with printing or production errors, making them unique and collectible due to their rarity and novelty.
+    Rookie, // Rookie rarity represents cards of up-and-coming players who are making their professional debut or early in their careers. These cards may hold special significance for collectors.
+    AllStar, // All-Star rarity represents cards of players who have been selected to participate in the All-Star Game, showcasing their exceptional skills and popularity.
+    HallOfFame, // HallOfFame rarity represents cards of players who have been inducted into the Baseball Hall of Fame, symbolizing their legendary status in the sport.
+    Autograph, // Autograph rarity represents cards that feature the authentic signature of the player. These cards are highly valued by collectors due to their personal connection with the player.
+    GameUsed, // GameUsed rarity represents cards that contain actual pieces of game-worn equipment or memorabilia, such as jerseys, bats, or baseballs. These cards are considered unique and highly sought-after.
+    Parallel, // Parallel rarity represents cards with special variants or editions, featuring different designs, colors, or finishes. These cards offer collectors additional options and variations to collect.
+    Vintage, // Vintage rarity represents cards that are considered classics or from earlier eras of baseball. These cards may have historical significance or be of interest to collectors due to their age and rarity.
+    Relic, // Relic rarity represents cards that contain embedded pieces of equipment, such as bat chips or jersey swatches. These cards are similar to GameUsed cards but focus on specific equipment components.
+    Error, // Error rarity represents cards with printing or production errors, making them unique and collectible due to their rarity and novelty.
 }
 impl CardStyle {
     fn new() -> Self {
         let mut rng = rand::thread_rng();
         match rng.gen_range(0..=1000) {
-              0..= 50 => CardStyle::Rookie,     // 5% chance
-             51..=150 => CardStyle::AllStar,    // 10% chance
-            151..=300 => CardStyle::HallOfFame, // 15% chance
-            301..=450 => CardStyle::Autograph,  // 15% chance
-            451..=600 => CardStyle::GameUsed,   // 15% chance
-            601..=750 => CardStyle::Parallel,   // 15% chance
-            751..=850 => CardStyle::Vintage,    // 10% chance
-            851..=950 => CardStyle::Relic,      // 10% chance
-                    _ => CardStyle::Error,      // 5% chance
+              0..=400 => CardStyle::Rookie,
+            401..=600 => CardStyle::AllStar,
+            601..=750 => CardStyle::HallOfFame,
+            751..=850 => CardStyle::Autograph,
+            851..=925 => CardStyle::GameUsed,
+            926..=975 => CardStyle::Parallel,
+            976..=990 => CardStyle::Vintage,
+            991..=997 => CardStyle::Relic,
+                    _ => CardStyle::Error,
         }
     }
 }
-#[derive(Debug, Serialize, Deserialize,Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Skills {
     attack: Skill,
     defense: Skill,
@@ -100,8 +99,6 @@ impl Skills {
             hitpoints: Skill::new(),
         }
     }
-
-    
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Skill {
@@ -120,12 +117,12 @@ impl Skill {
     fn exp_to_next_level(level: u8) -> u32 {
         let mut needed_exp = 0;
         for n in 1..level {
-            needed_exp += n as u32 +  (50 * f32::powf(2.0, n as f32 / 5.0) as u32);
+            needed_exp += n as u32 + (50 * f32::powf(2.0, n as f32 / 5.0) as u32);
         }
         needed_exp
-    }  
+    }
 
-    fn level_up (&mut self) {
+    fn level_up(&mut self) {
         if self.level != u8::MAX {
             self.level += 1;
             self.experience = 0;
@@ -184,7 +181,7 @@ impl Card {
             owner_id: None,
         }
     }
-    pub fn get_id (&self) -> Uuid {
+    pub fn get_id(&self) -> Uuid {
         self.id
     }
     pub fn assign_owner(&mut self, owner_id: Option<Uuid>) {

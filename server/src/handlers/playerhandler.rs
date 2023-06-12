@@ -1,17 +1,8 @@
-use actix_web::{
-    delete,
-    get,
-    post, 
-    put, 
-    web, Error, HttpResponse, Responder, error,
-};
-use mongodb::{bson::{uuid::Uuid}};
-use serde::Deserialize;
 use super::AppState;
-use crate::{
-    db::{ dbplayer::*},
-    model::{ player::*},
-};
+use crate::{db::dbplayer::*, model::player::*};
+use actix_web::{delete, error, get, post, put, web, Error, HttpResponse, Responder};
+use mongodb::bson::uuid::Uuid;
+use serde::Deserialize;
 
 #[get("/players")]
 pub async fn retreive_players(data: web::Data<AppState>) -> impl Responder {
@@ -58,6 +49,8 @@ pub async fn create_player(
 #[derive(Deserialize)]
 pub struct UpdatePlayer {
     pub name: String,
+    pub dink_coin: u32,
+    pub social_credit: u32,
 }
 #[put("/players/{player_id}")]
 pub async fn edit_player(
@@ -70,6 +63,8 @@ pub async fn edit_player(
         &data.r.try_lock().unwrap().db,
         Uuid::parse_str(id.into_inner()).unwrap(),
         response.name.clone(),
+        response.dink_coin.clone(),
+        response.social_credit.clone(),
     )
     .await;
     HttpResponse::Ok().body("Player Edited")
@@ -85,5 +80,5 @@ pub async fn delete_player(data: web::Data<AppState>, id: web::Path<String>) -> 
         HttpResponse::Ok().body("Removed User".to_string())
     } else {
         HttpResponse::Ok().body("Not able to Remove User".to_string())
-    }    
+    }
 }

@@ -1,8 +1,15 @@
-use mongodb::{bson::{doc, uuid::Uuid}, Database, error::{Error}, options::FindOneAndDeleteOptions};
-use futures::stream::TryStreamExt;
-use crate::{model::{player::*, card::Card}, db::dbcard::update_card_in_db};
+use crate::{
+    db::dbcard::update_card_in_db,
+    model::{card::Card, player::*},
+};
 use chrono::prelude::*;
-
+use futures::stream::TryStreamExt;
+use mongodb::{
+    bson::{doc, uuid::Uuid},
+    error::Error,
+    options::FindOneAndDeleteOptions,
+    Database,
+};
 
 pub async fn fetch_players_from_db(db: &Database) -> Result<Vec<Player>, Error> {
     let collection = db.collection::<Player>("players");
@@ -16,23 +23,28 @@ pub async fn fetch_players_from_db(db: &Database) -> Result<Vec<Player>, Error> 
 
 pub async fn add_player_to_db(db: &Database, p: Player) -> bool {
     let collection = db.collection::<Player>("players");
-    let result =  collection.insert_one(p, None).await;
+    let result = collection.insert_one(p, None).await;
     match result {
         Ok(_) => true,
         Err(_) => false,
     }
-    
 }
 
-pub async fn update_player_to_db(db: &Database, id: Uuid, name: String) -> bool{
+pub async fn update_player_to_db(
+    db: &Database,
+    id: Uuid,
+    name: String,
+    dink_coin: u32,
+    social_credit: u32,
+) -> bool {
     let collection = db.collection::<Player>("players");
     let filter = doc! { "id":  id };
-    let result = collection.find_one_and_update(filter, doc! { "$set": { "name": name,  "last_updated": Utc::now().to_string()}}, None).await.unwrap_or(None);
+    let result = collection.find_one_and_update(filter, doc! { "$set": { "name": name, "social_credit": social_credit, "dink_coin": dink_coin,  "last_updated": Utc::now().to_string()}}, None).await.unwrap_or(None);
     match result {
         Some(_) => true,
         None => false,
     }
-}   
+}
 
 pub async fn remove_player_from_db(db: &Database, id: Uuid) -> bool {
     let collection = db.collection::<Player>("players");
@@ -41,15 +53,22 @@ pub async fn remove_player_from_db(db: &Database, id: Uuid) -> bool {
         .build();
 
     let filter = doc! { "id": id };
-    let result = collection.find_one_and_delete(filter, options).await.unwrap_or(None);    
+    let result = collection
+        .find_one_and_delete(filter, options)
+        .await
+        .unwrap_or(None);
     match result {
         Some(_) => {
             let card_filter = doc! {"owner_id": id};
-            let did_delete = db.collection::<Card>("cards").delete_many(card_filter, None).await.expect("could not find cards");
+            let did_delete = db
+                .collection::<Card>("cards")
+                .delete_many(card_filter, None)
+                .await
+                .expect("could not find cards");
 
             println!("deleted player and cards {:?}, releasing mutex", did_delete);
             true
-        },
+        }
         None => false,
     }
 }

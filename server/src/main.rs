@@ -90,7 +90,6 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .wrap(cors)
-            .wrap(Logger::default())
             .app_data(initial_state.clone())
             .service(retreive_players)
             .service(retreive_one_player)
