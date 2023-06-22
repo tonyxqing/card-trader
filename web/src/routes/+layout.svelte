@@ -35,6 +35,7 @@
 	<a href="/">Home</a>
 	<a href="/players">Players</a>
 	<a href="/cards">Cards</a>
+	<a href="/battle">Battle</a>
 </nav>
 
 <slot />
