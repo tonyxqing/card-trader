@@ -1,21 +1,21 @@
 mod db;
+mod extractors;
 mod handlers;
 mod model;
 use actix_cors::Cors;
+use actix_web::Scope;
 use actix_web::{
-    error::{ErrorBadRequest},
-    get, 
-    middleware::Logger,
-    web, App, Error, HttpResponse, HttpServer,
+    error::ErrorBadRequest, get, middleware::Logger, web, App, Error, HttpResponse, HttpServer,
 };
 use db::Resolver;
 use env_logger;
-use handlers::{cardhandler::*, playerhandler::*, AppState};
+use extractors::authentication_token::*;
+use handlers::{authenticationhandler::*, cardhandler::*, playerhandler::*, AppState};
 use image::io::Reader as ImageReader;
 use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
+use std::env;
 use std::io::Cursor;
 use std::sync::Mutex;
-
 const IMG_WIDTH: u32 = 250;
 const IMG_HEIGHT: u32 = 350;
 
@@ -52,6 +52,8 @@ async fn main() -> std::io::Result<()> {
 
     let initial_state = web::Data::new(AppState {
         r: Mutex::new(Resolver::new().await),
+        battle_queue: Vec::new(),
+        secret: env::var("JWT_SECRET").unwrap_or("default".to_string()),
     });
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -65,20 +67,14 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .wrap(Logger::default())
             .app_data(initial_state.clone())
-            .service(retreive_players)
-            .service(retreive_one_player)
-            .service(create_player)
-            .service(delete_player)
-            .service(edit_player)
             .service(fetch_my_picture)
-            .service(create_card_for_player)
-            .service(retreive_player_cards)
-            .service(retrieve_cards)
-            .service(retrieve_one_card)
-            .service(delete_card)
-            .service(update_card)
+            .service(login_scope())
+            .service(players_scope())
+            .service(cards_scope())
     })
-    .bind_openssl("127.0.0.1:8080", builder)?
+    .bind(("127.0.0.1", 8080))?
     .run()
     .await
 }
+
+// .bind_openssl("127.0.0.1:8080", builder)?
