@@ -12,6 +12,9 @@ import BattleScreen from './screens/BattleScreen';
 import TrainingScreen from './screens/TrainingScreen';
 import ShopScreen from './screens/ShopScreen';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import LoginScreen from './screens/LoginScreen';
+import RegistrationScreen from './screens/RegistrationScreen';
+import EulaScreen from './screens/EulaScreen';
 
 const Tab = createMaterialTopTabNavigator<RootTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -32,16 +35,20 @@ export default function App() {
   );
 
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView className="flex-1">
       <NavigationContainer>
         <Stack.Navigator>
+          <Stack.Screen name="Login" component={LoginScreen}/>
           <Stack.Screen
             name="Main"
             component={TabNavigator}
-            options={{headerShown: false}}></Stack.Screen>
-          <Stack.Screen name="Battle" component={BattleScreen}></Stack.Screen>
-          <Stack.Screen name="Train" component={TrainingScreen}></Stack.Screen>
-          <Stack.Screen name="Shop" component={ShopScreen}></Stack.Screen>
+            // options={{headerShown: false}}
+            />
+          <Stack.Screen name="Battle" component={BattleScreen}/>
+          <Stack.Screen name="Train" component={TrainingScreen}/>
+          <Stack.Screen name="Shop" component={ShopScreen}/>
+          <Stack.Screen name="Registration" component={RegistrationScreen}/>
+          <Stack.Screen name="Eula" component={EulaScreen}/>
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>
@@ -51,5 +58,5 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-  }
+  },
 });

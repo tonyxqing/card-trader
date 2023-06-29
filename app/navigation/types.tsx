@@ -1,6 +1,6 @@
-import { MaterialTopTabScreenProps } from "@react-navigation/material-top-tabs";
+import { MaterialTopTabScreenProps, } from "@react-navigation/material-top-tabs";
 import { CompositeScreenProps, NavigatorScreenParams } from "@react-navigation/native";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { NativeStackScreenProps} from "@react-navigation/native-stack";
 
 export type RootTabParamList = {
     Collection: {
@@ -17,6 +17,9 @@ export type RootStackParamList = {
     Battle: undefined,
     Train: undefined,
     Shop: undefined,
+    Login: undefined,
+    Registration: undefined,
+    Eula: undefined,
 }
 
 export type RootStackScreenProps<T extends keyof RootStackParamList> =
