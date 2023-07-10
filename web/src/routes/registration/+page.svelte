@@ -5,11 +5,14 @@
 			<input name="username" type="username" required />
 		</label>
 		<label>
-			Passcode
-			<input name="passcode" type="password" required />
+			Phone Number
+			<input name="phone" type="tel" maxlength="10" pattern={String.raw`[0-9]{10}`} required />
 		</label>
-		<a href="/registration">register a new account</a>
-		<button>Log in</button>
+		<label>
+			Passcode
+			<input name="passcode" type="password" maxlength="8" required />
+		</label>
+		<button>Create Account</button>
 	</form>
 </div>
 
@@ -18,7 +21,6 @@
 		display: flex;
 		width: 100%;
 		justify-content: center;
-		align-items: center;
 	}
 	form {
 		top: 120px;
@@ -29,7 +31,7 @@
 		display: flex;
 		gap: 20px;
 		width: 320px;
-		justify-content: space-between;
+		align-self: center;
 		flex-direction: column;
 	}
 	form > label {
@@ -49,6 +51,10 @@
 		border-radius: 4px;
 		background-color: #42f692;
 	}
+	button:hover {
+		background-color: #44ffa9;
+	}
+
 	input {
 		height: 32px;
 	}

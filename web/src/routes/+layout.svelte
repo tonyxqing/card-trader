@@ -3,6 +3,9 @@
 	import Icon from '../lib/assets/favicon.png';
 	import { tweened } from 'svelte/motion';
 	import { expoIn, quadIn, quadInOut } from 'svelte/easing';
+	import { writable } from 'svelte/store';
+	export const LoginSession = false;
+
 	let options = { duration: 5000 }; // Specify the easing function
 	let deg = tweened(0, options);
 	onMount(async () => {
@@ -36,6 +39,24 @@
 	<a href="/players">Players</a>
 	<a href="/cards">Cards</a>
 	<a href="/battle">Battle</a>
+	{#if LoginSession}
+		<!-- content here -->
+		<p>Welcome</p>
+		// display username
+	{:else}
+		<!-- else content here -->Login
+		<form method="POST" action="/login">
+			<label>
+				Username
+				<input name="username" type="username" required />
+			</label>
+			<label>
+				Password
+				<input name="password" type="password" required />
+			</label>
+			<button>submit</button>
+		</form>
+	{/if}
 </nav>
 
 <slot />

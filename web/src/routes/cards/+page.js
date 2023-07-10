@@ -12,6 +12,6 @@ export async function load({ fetch }) {
         }
         return { response: "hi"};
     } catch {
-        return {response: "hi"};
+        return { response: "hi" };
     }
 }

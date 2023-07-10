@@ -5,5 +5,4 @@
 </script>
 
 <div>
-    hi
 </div>
