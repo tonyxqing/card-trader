@@ -8,14 +8,22 @@ export const actions = {
 			payload[key] = value;
 		});
 		payload['role'] = 'Basic';
-		const succ_registration = await fetch('http://localhost:8080/api/register-player', {
+		console.log(payload);
+		const succ_registration = await fetch('http://localhost:5000/api/register-player', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(payload)
 		});
-		const registration_response = await succ_registration.json();
+		let registration_response;
+		try {
+			registration_response = await succ_registration.json();
+		} catch {
+			registration_response = await succ_registration.text();
+			
+		}
+
 		console.log(registration_response);
 	}
 };

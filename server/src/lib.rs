@@ -35,7 +35,7 @@ mod tests {
     #[actix_rt::test]
     async fn db_can_remove_card() {
         let r: Resolver = Resolver::new().await;
-        remove_player_from_db(&r.db, Uuid::new());
+        remove_player_from_db(&r.db, Uuid::new()).await;
     }
 
     #[actix_rt::test]

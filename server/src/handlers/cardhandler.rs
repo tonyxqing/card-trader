@@ -33,7 +33,7 @@ async fn create_card(data: web::Data<AppState>, request: web::Json<CreateCard>) 
     let db = &data.r.try_lock().unwrap().db;
     println!("string is empty {}", request.name.is_empty());
     let card = Card::new(request.name.clone(), request.image.clone());
-    let result = add_card_to_db(db, &card).await;
+    let result = add_card_to_db(db, card.clone()).await;
 
     match result {
         true => HttpResponse::Ok().json(card),

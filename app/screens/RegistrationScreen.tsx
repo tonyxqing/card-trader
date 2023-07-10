@@ -21,11 +21,11 @@ const RegistrationScreen = ({
   navigation,
 }: RootStackScreenProps<'Registration'>) => {
   const [username, setUsername] = React.useState('');
-  const [phoneNumber, setPhoneNumber] = React.useState('');
+  const [emailAddr, setEmailAddr] = React.useState('');
   const [passcode, setPasscode] = React.useState('');
 
   const [agreedToEula, setAgreedToEula] = React.useState(false);
-  const phoneNumberRef = React.useRef<TextInput>(null);
+  const emailAddrRef = React.useRef<TextInput>(null);
   const passcodeRef = React.useRef<TextInput>(null);
   return (
     <ScrollView className='flex-1'>
@@ -41,20 +41,20 @@ const RegistrationScreen = ({
                 className="w-full p-2 h-14 border-black border-2"
                 onSubmitEditing={() => {
                   setTimeout(() => {
-                    if (phoneNumberRef.current) phoneNumberRef.current.focus();
+                    if (emailAddrRef.current) emailAddrRef.current.focus();
                   }, 0);
                 }}
               />
             </View>
             <View className="px-10 items-start">
-              <Text className="text-lg">Phone Number</Text>
+              <Text className="text-lg">Email</Text>
               <TextInput
-                ref={phoneNumberRef}
+                ref={emailAddrRef}
                 autoCorrect={false}
-                onChangeText={setPhoneNumber}
+                onChangeText={setEmailAddr}
                 keyboardType="numeric"
                 returnKeyType="done"
-                textContentType="telephoneNumber"
+                textContentType="emailAddress"
                 className="w-full p-2 h-14 border-black border-2"
                 onSubmitEditing={() => {
                   setTimeout(() => {
@@ -93,7 +93,7 @@ const RegistrationScreen = ({
           </View>
           <View className="rounded border-2 p-2 w-1/2 self-center">
             <Button
-              disabled={!agreedToEula || !username || !phoneNumber || !passcode}
+              disabled={!agreedToEula || !username || !emailAddr || !passcode}
               title="Create Account"
               onPress={async () => {
                 const response = await fetch(
@@ -107,7 +107,7 @@ const RegistrationScreen = ({
                     },
                     body: JSON.stringify({
                       username,
-                      phone: phoneNumber,
+                      email: emailAddr,
                       passcode,
                     }),
                   },

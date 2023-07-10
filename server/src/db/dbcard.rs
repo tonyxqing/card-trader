@@ -38,7 +38,7 @@ pub async fn fetch_one_card_from_db(db: &Database, id: Uuid) -> Result<Option<Ca
     Ok(result)
 }
 
-pub async fn add_card_to_db(db: &Database, c: &Card) -> bool {
+pub async fn add_card_to_db(db: &Database, c: Card) -> bool {
     let collection = db.collection::<Card>("cards");
     let result = collection.insert_one(c, None).await;
     match result {

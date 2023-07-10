@@ -1,18 +1,50 @@
+<script>
+	let passcode = '';
+	let retypedPasscode = '';
+	let email = '';
+	let username = '';
+</script>
+
 <div class="container">
 	<form method="POST">
 		<label>
 			Username
-			<input name="username" type="username" required />
+			<input
+				name="username"
+				type="username"
+				bind:value={username}
+				minlength="3"
+				maxlength="16"
+				required
+			/>
 		</label>
 		<label>
-			Phone Number
-			<input name="phone" type="tel" maxlength="10" pattern={String.raw`[0-9]{10}`} required />
+			Email
+			<input name="email" type="email" bind:value={email} required />
 		</label>
 		<label>
 			Passcode
-			<input name="passcode" type="password" maxlength="8" required />
+			<input
+				name="passcode"
+				type="password"
+				bind:value={passcode}
+				minlength="8"
+				maxlength="128"
+				required
+			/>
 		</label>
-		<button>Create Account</button>
+		<label>
+			Re-Type Passcode
+			<input
+				name="passcode"
+				type="password"
+				minlength="8"
+				bind:value={retypedPasscode}
+				maxlength="128"
+				required
+			/>
+		</label>
+		<button disabled={ passcode && passcode !== retypedPasscode || email.length < 3 || username.length < 3 }>Create Account</button>
 	</form>
 </div>
 
@@ -54,7 +86,12 @@
 	button:hover {
 		background-color: #44ffa9;
 	}
-
+	button:disabled,
+	button[disabled] {
+		border: 1px solid #999999;
+		background-color: #cccccc;
+		color: #666666;
+	}
 	input {
 		height: 32px;
 	}
