@@ -77,8 +77,40 @@ pub fn login_scope() -> Scope {
         .route("/decode-token", web::post().to(decode_token))
         .route("/protected", web::get().to(protected))
         .route("/verify/{user}/{token}", web::get().to(verify_email))
+        .route(
+            "/forgot-password/{user}/{token}",
+            web::post().to(forgot_passcode),
+        )
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserPasscodeReset {
+    passcode: String,
+    new_passcode: String,
+}
+pub async fn forgot_passcode(
+    data: web::Data<AppState>,
+    path: web::Path<(String, String)>,
+    json: web::Json<UserPasscodeReset>,
+) -> impl Responder {
+    let db = &data.r.lock().unwrap().db;
+    let username = &path.0;
+    let token = &path.1;
+    let passcode = json.passcode.clone();
+    let new_passcode = json.new_passcode.clone();
+
+    let user_filter = doc! { "username": username };
+    let users = db.collection::<User>("users");
+    let user_to_update = users.find_one(user_filter, None).await.unwrap_or(None);
+
+    match user_to_update {
+        Some(u) =>  HttpResponse::Ok().body("good job"),
+        None => HttpResponse::BadRequest().body("good job")
+        
+    }
+    // recieve and check updated pass
+    // if pass matches then update pass in db
+}
 pub async fn verify_email(
     data: web::Data<AppState>,
     path: web::Path<(String, String)>,
@@ -90,12 +122,18 @@ pub async fn verify_email(
         "verified": false
     };
     let users = db.collection::<User>("users");
-    let verify_user = users.find_one_and_update(user_filter, doc! { "$set": {"verified": true} }, None).await;
+    let verify_user = users
+        .find_one_and_update(user_filter, doc! { "$set": {"verified": true} }, None)
+        .await;
     match verify_user {
-        Ok(x) => HttpResponse::Ok().body("verified player"),
-        Err(_) => HttpResponse::Ok().body("did not verified player")
-    }   
+        Ok(Some(_)) => HttpResponse::Ok().body("verified player"),
+        _ => HttpResponse::Ok().body("did not verified player"),
+    }
 }
+
+// pub async fn get_email() -> impl Responder {
+
+// }
 
 #[derive(Serialize, Deserialize)]
 struct PlayerRegistration {

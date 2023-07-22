@@ -2,7 +2,7 @@
 export async function load({ fetch }) {
     try {
 
-        const req = await fetch("https://localhost:8080/cards", {
+        const req = await fetch("https://localhost:5000/cards", {
             method: "GET"
         })
     

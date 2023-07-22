@@ -72,9 +72,9 @@ async fn main() -> std::io::Result<()> {
             .service(players_scope())
             .service(cards_scope())
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", 5000))?
     .run()
     .await
 }
 
-// .bind_openssl("127.0.0.1:8080", builder)?
+// .bind_openssl("127.0.0.1:5000", builder)?

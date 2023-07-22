@@ -42,7 +42,7 @@
 	};
 
 	async function get_players() {
-		const req = await fetch('http://localhost:8080/players', {
+		const req = await fetch('http://localhost:5000/players', {
 			method: 'GET'
 		});
 		const data = await req.json();
@@ -50,7 +50,7 @@
 	}
 
 	async function get_player(player_id: string) {
-		const req = await fetch(`http://localhost:8080/players/${player_id}`, {
+		const req = await fetch(`http://localhost:5000/players/${player_id}`, {
 			method: 'GET'
 		});
 		const data = await req.json();
@@ -58,7 +58,7 @@
 	}
 
 	async function add_card(player_id: string, name: string, files: any) {
-		const req = await fetch(`http://localhost:8080/players/${player_id}/cards`, {
+		const req = await fetch(`http://localhost:5000/players/${player_id}/cards`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -71,7 +71,7 @@
 		return data;
 	}
 	async function fetch_one_card(card_id: string) {
-		const req = await fetch(`http://localhost:8080/cards/${card_id}`, {
+		const req = await fetch(`http://localhost:5000/cards/${card_id}`, {
 			method: 'GET'
 		});
 
@@ -92,7 +92,7 @@
 	}
 
 	async function fetch_player_cards(id: string) {
-		const req = await fetch(`http://localhost:8080/players/${id}/cards`, {
+		const req = await fetch(`http://localhost:5000/players/${id}/cards`, {
 			method: 'GET'
 		});
 		const data = await req.json();
@@ -104,13 +104,13 @@
 		selected_cards = data;
 	}
 	async function delete_card(card_id: string) {
-		const req = await fetch(`http://localhost:8080/cards/${card_id}`, {
+		const req = await fetch(`http://localhost:5000/cards/${card_id}`, {
 			method: 'DELETE'
 		});
 	}
 
 	async function edit_card(card_id: string, card: Card) {
-		const req = await fetch(`http://localhost:8080/cards/${card_id}`, {
+		const req = await fetch(`http://localhost:5000/cards/${card_id}`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'
@@ -126,7 +126,7 @@
 	}
 
 	async function add_player(name: string) {
-		const req = await fetch('http://localhost:8080/players', {
+		const req = await fetch('http://localhost:5000/players', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -136,14 +136,14 @@
 		get_players();
 	}
 	async function delete_player(id: string) {
-		const req = await fetch(`http://localhost:8080/players/${id}`, {
+		const req = await fetch(`http://localhost:5000/players/${id}`, {
 			method: 'DELETE'
 		});
 		get_players();
 	}
 
 	async function edit_player(obj: Partial<Player>) {
-		const response = await fetch(`http://localhost:8080/players/${obj.id}`, {
+		const response = await fetch(`http://localhost:5000/players/${obj.id}`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'

@@ -6,7 +6,7 @@ export const actions = {
 		data.forEach((value, key) => {
 			payload[key] = value;
 		});
-		const succ_login = await fetch('http://localhost:8080/api/authenticate-player', {
+		const succ_login = await fetch('http://localhost:5000/api/authenticate-player', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(payload)
